@@ -112,6 +112,39 @@ header{background:var(--ink);padding:0 24px;display:flex;align-items:center;heig
 .toast{position:fixed;bottom:22px;right:22px;background:var(--ink);color:var(--cream);padding:9px 16px;border-radius:5px;font-size:11px;font-family:var(--mono);opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;z-index:1000}
 .toast.show{opacity:1;transform:translateY(0)}
 .edited-badge{font-size:9px;font-family:var(--mono);color:var(--amber);margin-left:6px}
+/* ── CHARTS ── */
+.chart-container{padding:18px 0;border-bottom:1px solid var(--rule)}
+.chart-container:last-child{border-bottom:none}
+.chart-title{font-family:var(--serif);font-style:italic;font-size:14px;color:var(--ink2);margin-bottom:4px}
+.chart-subtitle{font-family:var(--mono);font-size:9px;color:var(--ink4);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.chart-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chart-svg{display:block;width:100%}
+.chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 0;color:var(--ink4)}
+.chart-empty-title{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink3)}
+.chart-empty-sub{font-size:11px;color:var(--ink4);margin-top:5px;text-align:center}
+.chart-legend{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--ink3);align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;flex-shrink:0}
+#chart-tooltip{position:fixed;background:var(--ink);color:var(--cream);font-family:var(--mono);font-size:11px;padding:6px 10px;border-radius:4px;pointer-events:none;z-index:500;display:none;max-width:340px;line-height:1.5;box-shadow:0 2px 12px rgba(26,26,24,.25)}
+#chart-tooltip.show{display:block}
+#chart-tooltip b,#chart-tooltip strong{color:#74c69d}
+.chart-svg text{font-family:var(--mono);fill:var(--ink3);font-size:10px}
+.chart-svg .axis-line{stroke:var(--rule2)}
+.chart-svg .grid-line{stroke:var(--rule);stroke-dasharray:2,3}
+.chart-svg .zero-line{stroke:var(--rule2);stroke-width:1}
+.chart-svg .hier-node{cursor:pointer}
+.chart-svg .hier-node:hover{stroke:var(--ink);stroke-width:1px}
+.chart-svg .center-name{fill:var(--ink);font-size:13px;font-weight:600}
+.chart-svg .center-val{fill:var(--ink2);font-size:11px}
+.drill-link{cursor:pointer;color:var(--ink);text-decoration:underline dotted transparent;transition:color .12s}
+.drill-link:hover{color:var(--accent2);text-decoration:underline dotted}
+.dash-section{background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:16px 20px;margin-bottom:16px}
+.dash-wrap{flex:1;overflow-y:auto;padding:20px 24px;min-height:0}
+.stat-cards{display:flex;flex-wrap:wrap;gap:12px}
+.stat-card{flex:1;min-width:140px;background:var(--surface);border:1px solid var(--rule);border-radius:5px;padding:12px 16px}
+.stat-card .flabel{display:block;margin-bottom:4px}
+.stat-val{font-family:var(--mono);font-size:16px;font-weight:600}
+.chart-block{border-bottom:1px solid var(--rule);padding:12px 24px;background:var(--surface)}
 /* ── NEW TRANSACTION MODAL ── */
 .modal-backdrop{position:fixed;inset:0;background:rgba(26,26,24,.45);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
 .modal-backdrop.open{opacity:1;pointer-events:all}
@@ -138,7 +171,8 @@ header{background:var(--ink);padding:0 24px;display:flex;align-items:center;heig
 <header>
   <div class="logo">h<span>ledger</span> ui</div>
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('transactions',this)">Transactions</div>
+    <div class="tab active" onclick="switchTab('dashboard',this)">Dashboard</div>
+    <div class="tab" onclick="switchTab('transactions',this)">Transactions</div>
     <div class="tab" onclick="switchTab('balancesheet',this)">Balance Sheet</div>
     <div class="tab" onclick="switchTab('pnl',this)">P &amp; L</div>
   </div>
@@ -175,7 +209,43 @@ header{background:var(--ink);padding:0 24px;display:flex;align-items:center;heig
   </div>
 </div>
 <div class="main">
-  <div class="panel active" id="panel-transactions">
+  <div class="panel active" id="panel-dashboard">
+    <div class="dash-wrap" id="dash-content">
+      <div class="empty" id="dash-empty" style="display:none">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No journal loaded</div>
+        <div class="empty-sub">Load an hledger .journal file to see the dashboard</div>
+        <div class="dropzone" onclick="document.getElementById('finput').click()">
+          <div style="color:var(--ink3);font-size:12px">Drop your journal file here</div>
+          <button class="btn primary" style="margin-top:10px" onclick="event.stopPropagation();document.getElementById('finput').click()">Browse file</button>
+        </div>
+      </div>
+      <div id="dash-sections" style="display:none">
+        <div class="dash-section">
+          <div class="chart-title">Net Worth</div>
+          <div class="chart-subtitle">assets + liabilities over time</div>
+          <div class="chart-toolbar">
+            <span class="flabel">Interval</span>
+            <select class="pselect" id="dash-interval" onchange="setChartState('interval',this.value)">
+              <option value="day">Daily</option>
+              <option value="week">Weekly</option>
+              <option value="month">Monthly</option>
+              <option value="quarter">Quarterly</option>
+              <option value="year">Yearly</option>
+            </select>
+            <div class="fsep"></div>
+            <button class="qd" id="dash-lm-line" onclick="setChartState('lineMode','line')">Line</button>
+            <button class="qd" id="dash-lm-area" onclick="setChartState('lineMode','area')">Area</button>
+          </div>
+          <div id="dash-networth"></div>
+        </div>
+        <div class="dash-section" id="dash-incexp-section" style="display:none"></div>
+        <div class="dash-section" id="dash-hier-section" style="display:none"></div>
+        <div id="dash-stats"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel" id="panel-transactions">
     <div class="txn-list" id="txn-list">
       <div class="empty">
         <div class="empty-icon">📒</div>
@@ -208,12 +278,19 @@ header{background:var(--ink);padding:0 24px;display:flex;align-items:center;heig
       <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink3);cursor:pointer">
         <input type="checkbox" id="bs-active" onchange="renderBS()"> Active only
       </label>
+      <div class="fsep"></div>
+      <button class="qd" id="bs-hm-treemap" onclick="setChartState('hierMode','treemap')">Treemap</button>
+      <button class="qd" id="bs-hm-sunburst" onclick="setChartState('hierMode','sunburst')">Sunburst</button>
+      <button class="qd" id="bs-hm-icicle" onclick="setChartState('hierMode','icicle')">Icicle</button>
+      <div class="fsep"></div>
+      <button class="qd" id="bs-charts-toggle" onclick="setChartState('showChartsBs',!chartState.showChartsBs)">▼ Charts</button>
       <div class="scroll-btns" id="bs-scroll-btns">
         <button class="scbtn" id="bs-scroll-left" onclick="scrollReport('bs',-1)" title="Earlier periods">◀</button>
         <span class="scroll-info" id="bs-scroll-info"></span>
         <button class="scbtn" id="bs-scroll-right" onclick="scrollReport('bs',1)" title="Later periods">▶</button>
       </div>
     </div>
+    <div class="chart-block" id="bs-chart-wrap"><div id="bs-chart"></div></div>
     <div class="rbody"><div class="rtable-wrap"><table class="rtable"><thead id="bs-thead"></thead><tbody id="bs-body"></tbody></table></div></div>
   </div>
   <div class="panel" id="panel-pnl">
@@ -236,12 +313,18 @@ header{background:var(--ink);padding:0 24px;display:flex;align-items:center;heig
       <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink3);cursor:pointer">
         <input type="checkbox" id="pnl-active" onchange="renderPnL()"> Active only
       </label>
+      <div class="fsep"></div>
+      <button class="qd" id="pnl-bm-stacked" onclick="setChartState('barMode','stacked')">Stacked</button>
+      <button class="qd" id="pnl-bm-single" onclick="setChartState('barMode','single')">Single</button>
+      <div class="fsep"></div>
+      <button class="qd" id="pnl-charts-toggle" onclick="setChartState('showChartsPnl',!chartState.showChartsPnl)">▼ Charts</button>
       <div class="scroll-btns" id="pnl-scroll-btns">
         <button class="scbtn" id="pnl-scroll-left" onclick="scrollReport('pnl',-1)" title="Earlier periods">◀</button>
         <span class="scroll-info" id="pnl-scroll-info"></span>
         <button class="scbtn" id="pnl-scroll-right" onclick="scrollReport('pnl',1)" title="Later periods">▶</button>
       </div>
     </div>
+    <div class="chart-block" id="pnl-chart-wrap"><div id="pnl-chart"></div></div>
     <div class="rbody"><div class="rtable-wrap"><table class="rtable"><thead id="pnl-thead"></thead><tbody id="pnl-body"></tbody></table></div></div>
   </div>
 </div>
@@ -288,6 +371,28 @@ header{background:var(--ink);padding:0 24px;display:flex;align-items:center;heig
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<!-- ACCOUNT DRILL-DOWN MODAL -->
+<div class="modal-backdrop" id="drill-modal" onclick="if(event.target===this)closeDrill()">
+  <div class="modal" style="width:860px">
+    <div class="modal-hdr">
+      <span class="modal-title" id="drill-title">Account</span>
+      <button class="modal-close" onclick="closeDrill()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="chart-subtitle" id="drill-balance"></div>
+      <div id="drill-line"></div>
+      <div class="chart-toolbar" style="margin-top:14px">
+        <button class="qd" id="drill-lm-line" onclick="setDrillMode('lineMode','line')">Line</button>
+        <button class="qd" id="drill-lm-area" onclick="setDrillMode('lineMode','area')">Area</button>
+        <div class="fsep"></div>
+        <button class="qd" id="drill-hm-treemap" onclick="setDrillMode('hierMode','treemap')">Treemap</button>
+        <button class="qd" id="drill-hm-sunburst" onclick="setDrillMode('hierMode','sunburst')">Sunburst</button>
+        <button class="qd" id="drill-hm-icicle" onclick="setDrillMode('hierMode','icicle')">Icicle</button>
+      </div>
+      <div id="drill-hier"></div>
+    </div>
+  </div>
+</div>
 <script>
 var allTxns=[],filtered=[],expandedId=null;
 var depths={bs:2,pnl:2};
@@ -384,6 +489,7 @@ function loadFile(e){
       document.getElementById('s-post').textContent=filtered.reduce(function(s,t){return s+t.postings.length;},0);
       document.getElementById('txn-list').innerHTML='';
       renderTxns();
+      if(activeTab==='dashboard')renderDashboard();
       toast('Loaded '+allTxns.length+' transactions');
     }catch(err){
       document.getElementById('txn-list').innerHTML='<div style="padding:24px;font-family:monospace;color:red;white-space:pre-wrap">PARSE ERROR:\n'+err.message+'\n\n'+err.stack+'</div>';
@@ -420,6 +526,7 @@ function applyFilters(){
   document.getElementById('s-count').textContent=filtered.length;
   document.getElementById('s-post').textContent=filtered.reduce(function(s,t){return s+t.postings.length;},0);
   if(activeTab==='transactions')renderTxns();
+  else if(activeTab==='dashboard')renderDashboard();
   else if(activeTab==='balancesheet')renderBS();
   else renderPnL();
 }
@@ -587,7 +694,10 @@ function renderSection(tbody, sectionId, title, prefixes, cols, depth, activeOnl
     }
 
     var lbl=document.createElement('span');
+    lbl.className='drill-link';
     lbl.textContent=acct.split(':').pop();
+    lbl.title=acct;
+    lbl.onclick=function(e){e.stopPropagation();openDrill(acct);};
     if(d>=2){lbl.style.color='var(--ink3)';lbl.style.fontSize='11px';}
     inner.appendChild(lbl);
     tdA.appendChild(inner);tr.appendChild(tdA);
@@ -649,6 +759,7 @@ function renderBS(){
   var depth=depths.bs,period=document.getElementById('bs-period').value,active=document.getElementById('bs-active').checked;
   var tbody=document.getElementById('bs-body'),thead=document.getElementById('bs-thead');
   tbody.innerHTML='';
+  renderBsChart();
   if(!allTxns.length){tbody.innerHTML='<tr><td style="text-align:center;padding:60px;color:var(--ink4);font-family:var(--serif);font-style:italic">Load a journal to see the balance sheet</td></tr>';return;}
   var txns=filtered.length||document.getElementById('f-from').value||document.getElementById('f-acct').value?filtered:allTxns;
   var cols=buildPeriodCols(txns,period);
@@ -671,11 +782,33 @@ function renderBS(){
   updateScrollUI('bs',cols.length);
 }
 
+// Hierarchy chart above the BS table: assets + liabilities sized by magnitude
+// (abs mode keeps liabilities visible next to dominant-positive assets)
+function renderBsChart(){
+  var wrap=document.getElementById('bs-chart-wrap');
+  if(!wrap)return;
+  wrap.style.display=chartState.showChartsBs&&allTxns.length?'':'none';
+  var tog=document.getElementById('bs-charts-toggle');
+  if(tog){
+    tog.textContent=chartState.showChartsBs?'▼ Charts':'▶ Charts';
+    tog.classList.toggle('active',chartState.showChartsBs);
+  }
+  var t=document.getElementById('bs-hm-treemap'),s=document.getElementById('bs-hm-sunburst'),i=document.getElementById('bs-hm-icicle');
+  if(t)t.classList.toggle('active',chartState.hierMode==='treemap');
+  if(s)s.classList.toggle('active',chartState.hierMode==='sunburst');
+  if(i)i.classList.toggle('active',chartState.hierMode==='icicle');
+  if(!chartState.showChartsBs||!allTxns.length)return;
+  var aP=getUsedPrefixes(allTxns,['assets','asset','ass']);
+  var lP=getUsedPrefixes(allTxns,['liabilities','liability','lia']);
+  renderHierarchy(document.getElementById('bs-chart'),buildAccountTree(aP.concat(lP),{abs:true}));
+}
+
 // ── P&L ───────────────────────────────────────────
 function renderPnL(){
   var depth=depths.pnl,period=document.getElementById('pnl-period').value,active=document.getElementById('pnl-active').checked;
   var tbody=document.getElementById('pnl-body'),thead=document.getElementById('pnl-thead');
   tbody.innerHTML='';
+  renderPnlChart();
   if(!allTxns.length){tbody.innerHTML='<tr><td style="text-align:center;padding:60px;color:var(--ink4);font-family:var(--serif);font-style:italic">Load a journal to see P&L</td></tr>';return;}
   var txns=filtered.length||document.getElementById('f-from').value||document.getElementById('f-acct').value?filtered:allTxns;
   var cols=buildPeriodCols(txns,period);
@@ -694,6 +827,25 @@ function renderPnL(){
     tbody.appendChild(tr);
   }
   updateScrollUI('pnl',cols.length);
+}
+
+// Bar chart above the P&L table (interval follows the P&L column period)
+function renderPnlChart(){
+  var wrap=document.getElementById('pnl-chart-wrap');
+  if(!wrap)return;
+  wrap.style.display=chartState.showChartsPnl&&allTxns.length?'':'none';
+  var tog=document.getElementById('pnl-charts-toggle');
+  if(tog){
+    tog.textContent=chartState.showChartsPnl?'▼ Charts':'▶ Charts';
+    tog.classList.toggle('active',chartState.showChartsPnl);
+  }
+  var bmS=document.getElementById('pnl-bm-stacked'),bmI=document.getElementById('pnl-bm-single');
+  if(bmS)bmS.classList.toggle('active',chartState.barMode==='stacked');
+  if(bmI)bmI.classList.toggle('active',chartState.barMode==='single');
+  if(!chartState.showChartsPnl||!allTxns.length)return;
+  var period=document.getElementById('pnl-period').value;
+  var interval=period&&period!=='none'?period:chartState.interval;
+  renderBarChart(document.getElementById('pnl-chart'),buildIncomeExpenseBars(interval),{mode:chartState.barMode});
 }
 
 // ── COLUMN SCROLL ─────────────────────────────────
@@ -734,7 +886,7 @@ function switchTab(tab,el){
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   el.classList.add('active');document.getElementById('panel-'+tab).classList.add('active');
   activeTab=tab;
-  if(tab==='transactions')renderTxns();else if(tab==='balancesheet')renderBS();else renderPnL();
+  if(tab==='transactions')renderTxns();else if(tab==='dashboard')renderDashboard();else if(tab==='balancesheet')renderBS();else renderPnL();
 }
 
 // ── ACCOUNT AUTOCOMPLETE ─────────────────────────
@@ -820,6 +972,908 @@ function acKey(e,inp){
   else if(e.key==='Enter'&&sel){e.preventDefault();inp.value=sel.textContent;inp.dispatchEvent(new Event('change',{bubbles:true}));drop.classList.remove('open');}
   else if(e.key==='Escape'){drop.classList.remove('open');}
 }
+
+// ── SVG HELPERS ───────────────────────────────────
+function svgEl(tag,attrs){
+  var el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  if(attrs)Object.keys(attrs).forEach(function(k){el.setAttribute(k,attrs[k]);});
+  return el;
+}
+function scaleLinear(domain,range){
+  var d0=domain[0],d1=domain[1],r0=range[0],r1=range[1],dd=d1-d0;
+  return function(v){
+    if(dd===0)return(r0+r1)/2;
+    return r0+(v-d0)*(r1-r0)/dd;
+  };
+}
+function scaleBand(domain,range,pad){
+  var n=domain.length,p=pad||0;
+  if(!n)return function(){return{x:0,w:0};};
+  var span=range[1]-range[0];
+  var step=span/Math.max(1e-9,n-p);
+  var w=step*(1-p);
+  var idx={};
+  domain.forEach(function(d,i){idx[d]=i;});
+  var f=function(v){
+    var i=idx[v];
+    if(i===undefined)return{x:0,w:0};
+    return{x:range[0]+i*step,w:w};
+  };
+  f.bandwidth=function(){return w;};
+  f.step=function(){return step;};
+  return f;
+}
+function niceNum(range,round){
+  var exp=Math.floor(Math.log(Math.abs(range)||1)/Math.LN10);
+  var f=range/Math.pow(10,exp),nf;
+  if(round){nf=f<1.5?1:f<3?2:f<7?5:10;}
+  else{nf=f<=1?1:f<=2?2:f<=5?5:10;}
+  return nf*Math.pow(10,exp);
+}
+// Padded, rounded tick values covering [min,max]; 0 included when in range.
+// Degenerate extent (min===max) collapses to [min, min+1] — matches Fava's
+// include_zero [0,1] fallback for empty extents (min 0 -> [0,1]).
+function niceTicks(min,max,count){
+  if(isNaN(min)||isNaN(max))return[0,1];
+  if(max<min){var t=min;min=max;max=t;}
+  if(max===min)return[min,min+1];
+  var span=max-min;
+  var step=niceNum(span/Math.max(1,(count-1)),true);
+  var t0=Math.floor(min/step)*step,t1=Math.ceil(max/step)*step,ticks=[];
+  for(var v=t0;v<=t1+step*0.5;v+=step)ticks.push(Math.abs(v)<step*1e-9?0:Math.round(v*1e9)/1e9);
+  return ticks;
+}
+function linePath(pts){
+  if(!pts.length)return'';
+  return pts.map(function(p,i){return(i?'L':'M')+p.x+','+p.y;}).join('');
+}
+function areaPath(pts,baseY){
+  if(!pts.length)return'';
+  var d=pts.map(function(p,i){return(i?'L':'M')+p.x+','+p.y;}).join('');
+  d+='L'+pts[pts.length-1].x+','+baseY+'L'+pts[0].x+','+baseY+'Z';
+  return d;
+}
+// Annular sector path. Angles in radians, a1 > a0. Handles full circle
+// (a1-a0 >= 2pi) by drawing each radius as two half-arcs.
+function arcPath(cx,cy,r0,r1,a0,a1){
+  var R=function(n){return Math.round(n*100)/100;};
+  var full=(a1-a0)>=Math.PI*2-1e-9;
+  var p='';
+  function pt(r,a){return R(cx+r*Math.cos(a))+','+R(cy+r*Math.sin(a));}
+  function outer(r,a){return R(r)+' '+R(r);}
+  if(full){
+    var mid=a0+Math.PI;
+    p='M'+pt(r1,a0)+'A'+outer(r1)+' 0 0 1 '+pt(r1,mid)+'A'+outer(r1)+' 0 0 1 '+pt(r1,a0);
+    p+='L'+pt(r0,a0)+'A'+outer(r0)+' 0 0 0 '+pt(r0,mid)+'A'+outer(r0)+' 0 0 0 '+pt(r0,a0)+'Z';
+  }else{
+    var large=(a1-a0)>Math.PI?1:0;
+    p='M'+pt(r1,a0)+'A'+outer(r1)+' 0 '+large+' 1 '+pt(r1,a1);
+    p+='L'+pt(r0,a1)+'A'+outer(r0)+' 0 '+large+' 0 '+pt(r0,a0)+'Z';
+  }
+  return p;
+}
+
+// ── CHART COLOR HELPERS ────────────────────────────
+// HCL -> sRGB conversion (D65 white point)
+function hcl2rgb(h,c,l){
+  var hr=h*Math.PI/180,a=c*Math.cos(hr),b=c*Math.sin(hr);
+  var fy=(l+16)/116,fx=fy+a/500,fz=fy-b/200;
+  var eps=216/24389,kap=24389/27;
+  // inverse Lab f: t^3 if t^3 > eps else linear slope 1/kap
+  function lin(t){var c3=t*t*t;return c3>eps?c3:(116*t-16)/kap;}
+  var xr=lin(fx),yr=l>kap*eps?Math.pow((l+16)/116,3):l/kap,zr=lin(fz);
+  var X=0.95047*xr,Y=yr,Z=1.08883*zr;
+  function gam(t){return t<=0.0031308?12.92*t:1.055*Math.pow(t,1/2.4)-0.055;}
+  function ch(v){var c2=Math.round(255*gam(v));return c2<0?0:c2>255?255:c2;}
+  var r=ch(3.2406*X-1.5372*Y-0.4986*Z),g=ch(-0.9689*X+1.8758*Y+0.0415*Z),bl=ch(0.0557*X-0.2040*Y+1.0570*Z);
+  function hx(n){return('0'+n.toString(16)).slice(-2);}
+  return'#'+hx(r)+hx(g)+hx(bl);
+}
+// Perceptually-uniform color range (Fava's hcl_color_range, hue offset 270)
+function hclColorRange(count,chroma,luminance){
+  var c=chroma===undefined?45:chroma,l=luminance===undefined?70:luminance;
+  var delta=360/count,cols=[];
+  for(var i=0;i<count;i++)cols.push(hcl2rgb((i*delta+270)%360,c,l));
+  return cols;
+}
+var ACCT_PALETTE=hclColorRange(15,30,80);
+var acctColorMap={},acctColorIdx=0;
+// Stable color per top-level account segment
+function accountColor(name){
+  var top=String(name||'').split(':')[0].toLowerCase();
+  if(acctColorMap[top]===undefined){acctColorMap[top]=ACCT_PALETTE[acctColorIdx%ACCT_PALETTE.length];acctColorIdx++;}
+  return acctColorMap[top];
+}
+function hexLerp(h1,h2,t){
+  function c(h,i){return parseInt(h.substr(i,2),16);}
+  function ch(a,b){return('0'+Math.round(a+(b-a)*t).toString(16)).slice(-2);}
+  return'#'+ch(c(h1,1),c(h2,1))+ch(c(h1,3),c(h2,3))+ch(c(h1,5),c(h2,5));
+}
+// 8 shades per family, dark -> light, for stacked bar segments
+function greenShade(i){return hexLerp('#1b4332','#b7e4c7',((i%8)+0)/7);}
+function redShade(i){return hexLerp('#9d0208','#f3b0ab',((i%8)+0)/7);}
+function fmtShort(n){
+  if(n===null||n===undefined||isNaN(n))return'—';
+  var neg=n<0,abs=Math.abs(n),s;
+  if(abs>=1e9)s=(abs/1e9).toFixed(1).replace(/\.0$/,'')+'B';
+  else if(abs>=1e6)s=(abs/1e6).toFixed(1).replace(/\.0$/,'')+'M';
+  else if(abs>=1e3)s=(abs/1e3).toFixed(1).replace(/\.0$/,'')+'k';
+  else s=String(Math.round(abs));
+  return neg?'-'+s:s;
+}
+
+// ── CHART TOOLTIP ──────────────────────────────────
+var chartTooltipEl=null;
+function tooltipInit(){
+  if(!chartTooltipEl){
+    chartTooltipEl=document.getElementById('chart-tooltip');
+    if(!chartTooltipEl){
+      chartTooltipEl=document.createElement('div');
+      chartTooltipEl.id='chart-tooltip';
+      document.body.appendChild(chartTooltipEl);
+    }
+  }
+  return chartTooltipEl;
+}
+function tooltipShow(html,clientX,clientY){
+  var el=tooltipInit();
+  el.innerHTML=html;
+  el.classList.add('show');
+  var w=el.getBoundingClientRect().width,h=el.getBoundingClientRect().height;
+  var vw=(typeof window!=='undefined'&&window.innerWidth)||1000,vh=(typeof window!=='undefined'&&window.innerHeight)||600;
+  var x=clientX+14,y=clientY-h-10;
+  if(x+w>vw-8)x=clientX-w-14;
+  if(x<8)x=8;
+  if(y<8)y=clientY+14;
+  if(y+h>vh-8)y=vh-h-8;
+  el.style.left=x+'px';
+  el.style.top=y+'px';
+}
+function tooltipHide(){if(chartTooltipEl)chartTooltipEl.classList.remove('show');}
+
+// ── CHART STATE ────────────────────────────────────
+var chartState={interval:'month',lineMode:'line',barMode:'stacked',hierMode:'treemap',hierView:'expenses',showChartsBs:true,showChartsPnl:true};
+(function(){
+  try{
+    var saved=localStorage.getItem('hledger-webuix-chart-state');
+    if(saved){var o=JSON.parse(saved);Object.keys(chartState).forEach(function(k){if(o[k]!==undefined)chartState[k]=o[k];});}
+  }catch(e){}
+})();
+function saveChartState(){try{localStorage.setItem('hledger-webuix-chart-state',JSON.stringify(chartState));}catch(e){}}
+function setChartState(key,val){
+  chartState[key]=val;
+  saveChartState();
+  if(activeTab==='dashboard')renderDashboard();
+  else if(activeTab==='balancesheet')renderBS();
+  else if(activeTab==='pnl')renderPnL();
+}
+
+// ── CHART DATA BUILDERS ────────────────────────────
+// Date helpers (local-time safe)
+function dParts(s){var p=String(s).split('-');return{y:+p[0],m:+p[1],d:+p[2]};}
+function dStr(y,m,d){return y+'-'+('0'+m).slice(-2)+'-'+('0'+d).slice(-2);}
+function dMake(s){var p=dParts(s);return new Date(p.y,p.m-1,p.d);}
+function inPrefixList(acct,pxs){
+  var a=String(acct||'').toLowerCase();
+  return pxs.some(function(px){return a.indexOf(px)===0;});
+}
+
+// Interval buckets over the filtered date range. Pure — no DOM access.
+function intervalDates(txns,interval){
+  if(!txns.length)return[];
+  var min=txns[0].date,max=txns[txns.length-1].date,out=[];
+  if(interval==='day'){
+    var seen={};
+    txns.forEach(function(t){if(!seen[t.date]){seen[t.date]=1;out.push({label:t.date,start:t.date,end:t.date});}});
+    return out;
+  }
+  if(interval==='week'){
+    var d=dMake(min),end=dMake(max);
+    d.setDate(d.getDate()-((d.getDay()+6)%7));            // Monday of first week
+    end.setDate(end.getDate()+(6-((end.getDay()+6)%7))); // Sunday of last week
+    while(d<=end){
+      var e=new Date(d);e.setDate(e.getDate()+6);
+      var s=dStr(d.getFullYear(),d.getMonth()+1,d.getDate());
+      out.push({label:s,start:s,end:dStr(e.getFullYear(),e.getMonth()+1,e.getDate())});
+      d.setDate(d.getDate()+7);
+    }
+    return out;
+  }
+  var p0=dParts(min),p1=dParts(max);
+  if(interval==='quarter'){
+    var q0=Math.floor((p0.m-1)/3),cur=new Date(p0.y,q0*3,1),endQ=new Date(p1.y,p1.m-1,1);
+    while(cur<=endQ){
+      var y=cur.getFullYear(),q=Math.floor(cur.getMonth()/3);
+      var le=new Date(y,q*3+3,0);
+      out.push({label:y+' Q'+(q+1),start:dStr(y,q*3+1,1),end:dStr(le.getFullYear(),le.getMonth()+1,le.getDate())});
+      cur.setMonth(cur.getMonth()+3);
+    }
+    return out;
+  }
+  if(interval==='year'){
+    for(var y=p0.y;y<=p1.y;y++)out.push({label:String(y),start:y+'-01-01',end:y+'-12-31'});
+    return out;
+  }
+  // month (default)
+  var cur=new Date(p0.y,p0.m-1,1),endM=new Date(p1.y,p1.m-1,1);
+  while(cur<=endM){
+    var yy=cur.getFullYear(),mm=cur.getMonth(),last=new Date(yy,mm+1,0);
+    out.push({label:yy+'-'+('0'+(mm+1)).slice(-2),start:dStr(yy,mm+1,1),end:dStr(last.getFullYear(),last.getMonth()+1,last.getDate())});
+    cur.setMonth(mm+1);
+  }
+  return out;
+}
+
+// Net worth = running sum of Assets + Liabilities postings per interval end
+function buildNetWorthSeries(interval){
+  var txns=filtered;
+  if(!txns.length)return[];
+  var pxs=getUsedPrefixes(allTxns,['assets','asset','ass']).concat(getUsedPrefixes(allTxns,['liabilities','liability','lia']));
+  if(!pxs.length)return[];
+  var buckets=intervalDates(txns,interval),sum=0,i=0,series=[];
+  buckets.forEach(function(b){
+    while(i<txns.length&&txns[i].date<=b.end){
+      txns[i].postings.forEach(function(p){
+        if(p.amount!==null&&inPrefixList(p.account,pxs))sum+=p.amount;
+      });
+      i++;
+    }
+    series.push({date:b.end,label:b.label,value:Math.round(sum*100)/100});
+  });
+  return series;
+}
+
+// Per-interval income / expense segments, netted per account.
+// Income value = -amount (income postings are negative -> positive bars).
+function buildIncomeExpenseBars(interval){
+  var txns=filtered;
+  if(!txns.length)return{labels:[],income:[],expenses:[]};
+  var iP=getUsedPrefixes(allTxns,['income','revenue','revenues','inc']);
+  var eP=getUsedPrefixes(allTxns,['expenses','expense','exp']);
+  var buckets=intervalDates(txns,interval);
+  var labels=[],income=[],expenses=[];
+  buckets.forEach(function(b){
+    labels.push(b.label);
+    var inc={},exp={};
+    txns.forEach(function(t){
+      if(t.date<b.start||t.date>b.end)return;
+      t.postings.forEach(function(p){
+        if(p.amount===null||!p.account)return;
+        var a=p.account.toLowerCase();
+        if(iP.length&&iP.some(function(px){return a.indexOf(px)===0;}))inc[p.account]=(inc[p.account]||0)-p.amount;
+        else if(eP.length&&eP.some(function(px){return a.indexOf(px)===0;}))exp[p.account]=(exp[p.account]||0)+p.amount;
+      });
+    });
+    function segs(map){
+      return Object.keys(map).filter(function(k){return Math.abs(map[k])>0.005;})
+        .map(function(k){return{account:k,value:Math.round(map[k]*100)/100};})
+        .sort(function(x,y){return Math.abs(y.value)-Math.abs(x.value);});
+    }
+    income.push(segs(inc));
+    expenses.push(segs(exp));
+  });
+  return{labels:labels,income:income,expenses:expenses};
+}
+
+// Account hierarchy tree for the filtered period totals.
+// value = size for layout (clamped toward root's dominant sign, like Fava;
+// with opts.abs, sized by magnitude so negative sections survive - used for
+// the combined balance-sheet view); signedValue keeps the real balance.
+function buildAccountTree(prefixes,opts){
+  var absMode=opts&&opts.abs;
+  var raw=buildRawBals(filtered,prefixes);
+  var root={name:'root',fullName:'',direct:0,signedValue:0,value:0,children:[],isDummy:false};
+  var nodes={'':root};
+  function nodeFor(fullName){
+    if(nodes[fullName])return nodes[fullName];
+    var parts=fullName.split(':'),parentName=parts.slice(0,-1).join(':'),parent=nodeFor(parentName);
+    var n={name:parts[parts.length-1],fullName:fullName,direct:0,signedValue:0,value:0,children:[],isDummy:false};
+    nodes[fullName]=n;
+    parent.children.push(n);
+    return n;
+  }
+  Object.keys(raw).forEach(function(acct){
+    if(Math.abs(raw[acct])<0.005)return;
+    nodeFor(acct).direct=raw[acct];
+  });
+  // roll up signedValues, add dummy leafs for internal nodes with own balance
+  function walk(n){
+    n.signedValue=n.direct;
+    n.children.forEach(walk);
+    n.children.forEach(function(c){n.signedValue+=c.signedValue;});
+    if(n.children.length&&Math.abs(n.direct)>0.005){
+      n.children.push({name:n.name,fullName:n.fullName,direct:n.direct,signedValue:n.direct,value:0,children:[],isDummy:true});
+    }
+  }
+  walk(root);
+  // dominant sign of the whole tree (root rollup); abs mode sizes by magnitude
+  var sign=absMode?null:(root.signedValue<-0.005?-1:1);
+  function clamp(n){
+    n.children.forEach(clamp);
+    n.value=n.children.length?n.children.reduce(function(s,c){return s+c.value;},0):(absMode?Math.abs(n.signedValue):Math.max(sign*n.signedValue,0));
+    n.children=n.children.filter(function(c){return c.value>0.005;});
+    n.value=n.children.length?n.children.reduce(function(s,c){return s+c.value;},0):n.value;
+  }
+  clamp(root);
+  // sort children by value desc, name asc
+  function sortKids(n){
+    n.children.sort(function(a,b){return b.value-a.value||a.name.localeCompare(b.name);});
+    n.children.forEach(sortKids);
+  }
+  sortKids(root);
+  return root;
+}
+
+// Running balance of an account (incl. children) at each date it changed
+function buildAccountBalanceSeries(accountPrefix){
+  var txns=filtered;
+  if(!txns.length||!accountPrefix)return[];
+  var q=String(accountPrefix).toLowerCase();
+  var sum=0,series=[],idxByDate={};
+  txns.forEach(function(t){
+    var touched=false;
+    t.postings.forEach(function(p){
+      if(p.amount!==null&&p.account&&p.account.toLowerCase().indexOf(q)===0){sum+=p.amount;touched=true;}
+    });
+    if(touched){
+      sum=Math.round(sum*100)/100;
+      if(idxByDate[t.date]===undefined){series.push({date:t.date,value:sum});idxByDate[t.date]=series.length-1;}
+      else series[idxByDate[t.date]].value=sum;
+    }
+  });
+  return series;
+}
+
+// ── CHART RENDERERS ────────────────────────────────
+// Generic line/area chart. points = [{date, label?, value}], flat single series.
+var LINE_H=250,LINE_MARGIN={top:10,right:10,bottom:30,left:50};
+function renderLineChart(container,points,opts){
+  opts=opts||{};
+  points=points&&points.length?points.slice():[];
+  container.innerHTML='';
+  if(!points.length){
+    container.innerHTML='<div class="chart-empty"><div class="chart-empty-title">No data for the selected filters.</div><div class="chart-empty-sub">Adjust the period, account, tag or text filters.</div></div>';
+    return;
+  }
+  var W=container.clientWidth||(container.getBoundingClientRect&&container.getBoundingClientRect().width)||900;
+  var H=opts.height||LINE_H,M=LINE_MARGIN;
+  var innerW=W-M.left-M.right,innerH=H-M.top-M.bottom;
+  var vals=points.map(function(p){return p.value;});
+  var vmin=Math.min.apply(null,vals),vmax=Math.max.apply(null,vals);
+  var pad=(vmax-vmin)*0.03||1;
+  vmin-=pad;vmax+=pad;
+  if(opts.mode==='area'){vmin=Math.min(vmin,0);vmax=Math.max(vmax,0);}
+  var ticks=niceTicks(vmin,vmax,5);
+  vmin=Math.min(vmin,ticks[0]);vmax=Math.max(vmax,ticks[ticks.length-1]);
+  var y=scaleLinear([vmin,vmax],[innerH,0]);
+  var n=points.length;
+  var x=function(i){
+    if(n===1)return innerW/2;
+    return innerW*i/(n-1);
+  };
+  var svg=svgEl('svg',{class:'chart-svg',viewBox:'0 0 '+W+' '+H,width:W,height:H});
+  var g=svgEl('g',{transform:'translate('+M.left+','+M.top+')'});
+  svg.appendChild(g);
+  // grid + y labels
+  ticks.forEach(function(t){
+    var yy=y(t);
+    g.appendChild(svgEl('line',{class:'grid-line',x1:0,x2:innerW,y1:yy,y2:yy}));
+    var lb=svgEl('text',{x:-8,y:yy+3,'text-anchor':'end'});
+    lb.textContent=fmtShort(t);
+    g.appendChild(lb);
+  });
+  // zero line
+  if(vmin<0&&vmax>0)g.appendChild(svgEl('line',{class:'zero-line',x1:0,x2:innerW,y1:y(0),y2:y(0)}));
+  // x labels (thinned)
+  var xStep=70,every=Math.max(1,Math.ceil(n/(innerW/xStep)));
+  points.forEach(function(p,i){
+    if(i%every!==0&&i!==n-1)return;
+    var t=svgEl('text',{class:'x-label',x:x(i),y:innerH+18,'text-anchor':i===0?'start':i===n-1?'end':'middle'});
+    t.textContent=p.label||p.date;
+    g.appendChild(t);
+  });
+  // axis baseline
+  g.appendChild(svgEl('line',{class:'axis-line',x1:0,x2:innerW,y1:innerH,y2:innerH}));
+  // geometry
+  var pix=points.map(function(p,i){return{x:x(i),y:y(p.value),p:p};});
+  var color=opts.color||getComputedStyle2('--accent2','#40916c');
+  if(opts.mode==='area'){
+    var a=svgEl('path',{d:areaPath(pix,innerH),fill:color,'fill-opacity':'0.25',stroke:'none'});
+    g.appendChild(a);
+  }
+  g.appendChild(svgEl('path',{d:linePath(pix),fill:'none',stroke:color,'stroke-width':'2'}));
+  // dots (line mode)
+  if(opts.mode!=='area')pix.forEach(function(pt){
+    g.appendChild(svgEl('circle',{cx:pt.x,cy:pt.y,r:2,fill:color}));
+  });
+  // hover highlight (hidden until hover)
+  var hl=svgEl('circle',{cx:0,cy:0,r:4,fill:color,stroke:'var(--surface)','stroke-width':'1.5',visibility:'hidden'});
+  g.appendChild(hl);
+  // hover overlay
+  var hit=svgEl('rect',{x:0,y:0,width:innerW,height:innerH,fill:'transparent'});
+  hit.addEventListener('mousemove',function(ev){
+    var r=g.getBoundingClientRect?g.getBoundingClientRect():{left:0,width:innerW};
+    var mx=(ev.clientX||0)-r.left;
+    var idx=0,best=1e12;
+    pix.forEach(function(pt,i){var d=Math.abs(pt.x-mx);if(d<best){best=d;idx=i;}});
+    var pt=pix[idx];
+    hl.setAttribute('cx',pt.x);hl.setAttribute('cy',pt.y);hl.setAttribute('visibility','visible');
+    tooltipShow('<b>'+fmtAmt(pt.p.value)+'</b><br>'+esc(pt.p.date),ev.clientX,ev.clientY);
+  });
+  hit.addEventListener('mouseleave',function(){hl.setAttribute('visibility','hidden');tooltipHide();});
+  g.appendChild(hit);
+  container.appendChild(svg);
+}
+// CSS variable read with fallback (getComputedStyle on :root)
+function getComputedStyle2(name,fallback){
+  try{
+    var v=getComputedStyle(document.documentElement).getPropertyValue(name);
+    v=v?v.trim():'';
+    return v||fallback;
+  }catch(e){return fallback;}
+}
+
+// Diverging stacked bar chart: income above zero (greens), expenses below (reds).
+// data = {labels:[], income:[[{account,value}]], expenses:[[...]]}
+function renderBarChart(container,data,opts){
+  opts=opts||{};
+  container.innerHTML='';
+  if(!data||!data.labels||!data.labels.length){
+    container.innerHTML='<div class="chart-empty"><div class="chart-empty-title">No data for the selected filters.</div><div class="chart-empty-sub">Adjust the period, account, tag or text filters.</div></div>';
+    return;
+  }
+  var W=container.clientWidth||(container.getBoundingClientRect&&container.getBoundingClientRect().width)||900;
+  var H=opts.height||LINE_H,M=LINE_MARGIN;
+  var innerW=W-M.left-M.right,innerH=H-M.top-M.bottom;
+  // totals per interval
+  var maxUp=0,maxDown=0;
+  data.labels.forEach(function(lab,i){
+    var up=data.income[i].reduce(function(s,x){return s+x.value;},0);
+    var dn=data.expenses[i].reduce(function(s,x){return s+x.value;},0);
+    if(up>maxUp)maxUp=up;
+    if(dn>maxDown)maxDown=dn;
+  });
+  if(maxUp<0.005&&maxDown<0.005){
+    container.innerHTML='<div class="chart-empty"><div class="chart-empty-title">No income or expenses in the selected period.</div></div>';
+    return;
+  }
+  var pad=Math.max(maxUp,maxDown)*0.05;
+  var ticks=niceTicks(-maxDown-pad,Math.max(maxUp+pad,0.005),5);
+  var vmin=Math.min(-maxDown-pad,ticks[0]),vmax=Math.max(maxUp+pad,ticks[ticks.length-1]);
+  var y=scaleLinear([vmin,vmax],[innerH,0]);
+  var xs=scaleBand(data.labels,[0,innerW],0.1);
+  var svg=svgEl('svg',{class:'chart-svg',viewBox:'0 0 '+W+' '+H,width:W,height:H});
+  var g=svgEl('g',{transform:'translate('+M.left+','+M.top+')'});
+  svg.appendChild(g);
+  // grid + y labels
+  ticks.forEach(function(t){
+    var yy=y(t);
+    g.appendChild(svgEl('line',{class:'grid-line',x1:0,x2:innerW,y1:yy,y2:yy}));
+    var lb=svgEl('text',{x:-8,y:yy+3,'text-anchor':'end'});
+    lb.textContent=fmtShort(t);
+    g.appendChild(lb);
+  });
+  // zero line
+  var zy=y(0);
+  g.appendChild(svgEl('line',{class:'zero-line',x1:0,x2:innerW,y1:zy,y2:zy}));
+  // x labels (thinned)
+  var n=data.labels.length,every=Math.max(1,Math.ceil(n/(innerW/70)));
+  data.labels.forEach(function(lab,i){
+    if(i%every!==0&&i!==n-1)return;
+    var b=xs(lab);
+    var t=svgEl('text',{class:'x-label',x:b.x+b.w/2,y:innerH+18,'text-anchor':i===0?'start':i===n-1?'end':'middle'});
+    t.textContent=lab;
+    g.appendChild(t);
+  });
+  // axis baseline
+  g.appendChild(svgEl('line',{class:'axis-line',x1:0,x2:innerW,y1:innerH,y2:innerH}));
+  // stable shade index per account (income -> green family, expense -> red family)
+  var incAccts={},expAccts={},ii=0,ei=0;
+  data.labels.forEach(function(lab,i){
+    data.income[i].forEach(function(s){if(!(s.account in incAccts))incAccts[s.account]=ii++;});
+    data.expenses[i].forEach(function(s){if(!(s.account in expAccts))expAccts[s.account]=ei++;});
+  });
+  function incColor(acct){return greenShade(incAccts[acct]||0);}
+  function expColor(acct){return redShade(expAccts[acct]||0);}
+  // bars
+  data.labels.forEach(function(lab,i){
+    var b=xs(lab);
+    if(opts.mode==='single'){
+      var up=data.income[i].reduce(function(s,x){return s+x.value;},0);
+      var dn=data.expenses[i].reduce(function(s,x){return s+x.value;},0);
+      if(up>0.005)g.appendChild(svgEl('rect',{x:b.x,y:y(up),width:b.w,height:y(0)-y(up),fill:greenShade(0)}));
+      if(dn>0.005)g.appendChild(svgEl('rect',{x:b.x,y:y(0),width:b.w,height:y(-dn)-y(0),fill:redShade(0)}));
+    }else{
+      var cum=0;
+      data.income[i].forEach(function(s){
+        if(s.value<=0.005)return;
+        g.appendChild(svgEl('rect',{x:b.x,y:y(cum+s.value),width:b.w,height:y(cum)-y(cum+s.value),fill:incColor(s.account)}));
+        cum+=s.value;
+      });
+      cum=0;
+      data.expenses[i].forEach(function(s){
+        if(s.value<=0.005)return;
+        g.appendChild(svgEl('rect',{x:b.x,y:y(-cum),width:b.w,height:y(-(cum+s.value))-y(-cum),fill:expColor(s.account)}));
+        cum+=s.value;
+      });
+    }
+  });
+  // hover hitbox per column
+  data.labels.forEach(function(lab,i){
+    var b=xs(lab),hit=svgEl('rect',{x:b.x,y:0,width:b.w,height:innerH,fill:'transparent'});
+    hit.addEventListener('mousemove',function(ev){
+      var lines=[];
+      data.income[i].forEach(function(s){lines.push(esc(s.account)+' '+fmtAmt(s.value));});
+      data.expenses[i].forEach(function(s){lines.push(esc(s.account)+' '+fmtAmt(s.value));});
+      var up=data.income[i].reduce(function(s,x){return s+x.value;},0);
+      var dn=data.expenses[i].reduce(function(s,x){return s+x.value;},0);
+      lines.push('<b>'+esc(lab)+'</b>');
+      lines.push('income '+fmtAmt(up)+' · expenses '+fmtAmt(dn));
+      tooltipShow(lines.join('<br>'),ev.clientX,ev.clientY);
+    });
+    hit.addEventListener('mouseleave',function(){tooltipHide();});
+    g.appendChild(hit);
+  });
+  container.appendChild(svg);
+  // legend
+  var legend=document.createElement('div');
+  legend.className='chart-legend';
+  var html='';
+  if(opts.mode==='single'){
+    html+='<span class="legend-item"><span class="legend-swatch" style="background:'+greenShade(0)+'"></span>Income</span>';
+    html+='<span class="legend-item"><span class="legend-swatch" style="background:'+redShade(0)+'"></span>Expenses</span>';
+  }else{
+    Object.keys(incAccts).sort().forEach(function(a){
+      html+='<span class="legend-item"><span class="legend-swatch" style="background:'+incColor(a)+'"></span>'+esc(a)+'</span>';
+    });
+    Object.keys(expAccts).sort().forEach(function(a){
+      html+='<span class="legend-item"><span class="legend-swatch" style="background:'+expColor(a)+'"></span>'+esc(a)+'</span>';
+    });
+  }
+  legend.innerHTML=html;
+  container.appendChild(legend);
+}
+
+// ── HIERARCHY CHARTS ───────────────────────────────
+// Angular partition: each node gets fraction [x0,x1] and depth (Fava's d3 partition).
+// Children are laid out proportionally WITHIN their parent's span.
+function partitionTree(node){
+  node.x0=0;node.x1=1;node.depth=0;
+  (function walk(n){
+    var total=0;
+    n.children.forEach(function(c){total+=c.value;});
+    var span=n.x1-n.x0,acc=n.x0;
+    n.children.forEach(function(c){
+      c.depth=n.depth+1;
+      c.x0=acc;
+      c.x1=total>0?acc+c.value/total*span:n.x0;
+      acc=c.x1;
+      walk(c);
+    });
+  })(node);
+  return node;
+}
+
+// Squarified treemap (Bruls, Huizing & van Wijk 2000).
+// Assigns {x,y,w,h} to every node; leaves tile their parent exactly.
+// 1px inset per side gives 2px between siblings (Fava's paddingInner).
+function squarifyTree(tree,width,height){
+  function layoutNode(n,x,y,w,h){
+    n.x=x;n.y=y;n.w=w;n.h=h;
+    var kids=n.children.filter(function(c){return c.value>0;});
+    if(!kids.length)return;
+    var total=n.value;
+    if(!(total>0))return;
+    var scale=(w*h)/total;
+    var items=kids.map(function(k){return{node:k,area:k.value*scale};});
+    var row=[],rects=[],cx=x,cy=y,cw=w,ch=h;
+    function worst(r){
+      if(!r.length)return 1;
+      var side=Math.min(cw,ch);
+      if(side<=0)return Infinity;
+      var s=0;r.forEach(function(i){s+=i.area;});
+      var t=s/side,mw=0;
+      r.forEach(function(i){var asp=Math.max(t*t/i.area,i.area/(t*t));if(asp>mw)mw=asp;});
+      return mw;
+    }
+    function flush(){
+      if(!row.length||cw<=0||ch<=0){row=[];return;}
+      var s=0;row.forEach(function(i){s+=i.area;});
+      var out=[];
+      if(cw<=ch){
+        var t=s/cw,px=cx;
+        row.forEach(function(i){var wi=i.area/t;out.push({x:px,y:cy,w:wi,h:t});px+=wi;});
+        cy+=t;ch-=t;
+      }else{
+        var t2=s/ch,py=cy;
+        row.forEach(function(i){var hi=i.area/t2;out.push({x:cx,y:py,w:t2,h:hi});py+=hi;});
+        cx+=t2;cw-=t2;
+      }
+      rects=rects.concat(out);row=[];
+    }
+    while(items.length){
+      if(cw<=0||ch<=0)break;
+      var c=items.shift();
+      var wN=worst(row.concat([c])),wC=worst(row);
+      if(row.length&&wN>wC)flush();
+      row.push(c);
+    }
+    if(row.length)flush();
+    kids.forEach(function(k,i){
+      var r=rects[i];
+      if(!r)return;
+      var px=Math.min(1,r.w/4),py=Math.min(1,r.h/4);
+      layoutNode(k,r.x+px,r.y+py,r.w-2*px,r.h-2*py);
+    });
+  }
+  layoutNode(tree,0,0,width,height);
+  return tree;
+}
+
+function hierEmpty(container){
+  container.innerHTML='<div class="chart-empty"><div class="chart-empty-title">Chart is empty.</div><div class="chart-empty-sub">No accounts with a balance in the selected filters.</div></div>';
+}
+function hierHasData(tree){
+  return tree&&tree.children.length&&tree.value>0.005;
+}
+// full account path + amount + % of root, for tooltips
+function hierTip(n,rootVal){
+  return'<b>'+esc(n.fullName)+'</b><br>'+fmtAmt(n.signedValue)+' ('+(n.value/rootVal*100).toFixed(1)+'%)';
+}
+
+function renderTreemap(container,tree){
+  container.innerHTML='';
+  if(!hierHasData(tree)){hierEmpty(container);return;}
+  var W=container.clientWidth||(container.getBoundingClientRect&&container.getBoundingClientRect().width)||900;
+  var H=Math.min(W/2.5,400);
+  squarifyTree(tree,W,H);
+  var svg=svgEl('svg',{class:'chart-svg',viewBox:'0 0 '+W+' '+H,width:W,height:H});
+  var rootVal=tree.value;
+  function walk(n,topName){
+    if(!n.children.length){
+      var r=svgEl('rect',{class:'hier-node',x:n.x,y:n.y,width:n.w,height:n.h,fill:accountColor(topName)});
+      r.addEventListener('mousemove',function(ev){tooltipShow(hierTip(n,rootVal),ev.clientX,ev.clientY);});
+      r.addEventListener('mouseleave',function(){tooltipHide();});
+      svg.appendChild(r);
+      var fits=n.w>=40&&n.h>=14;
+      var t=svgEl('text',{x:n.x+n.w/2,y:n.y+n.h/2,'text-anchor':'middle','dominant-baseline':'middle',visibility:fits?'visible':'hidden'});
+      t.textContent=n.name;
+      svg.appendChild(t);
+      return;
+    }
+    n.children.forEach(function(c){walk(c,topName);});
+  }
+  tree.children.forEach(function(c){walk(c,c.fullName);});
+  container.appendChild(svg);
+}
+
+function renderSunburst(container,tree){
+  container.innerHTML='';
+  if(!hierHasData(tree)){hierEmpty(container);return;}
+  var W=container.clientWidth||(container.getBoundingClientRect&&container.getBoundingClientRect().width)||900;
+  var H=Math.min(W,500);
+  var cx=W/2,cy=H/2,radius=Math.min(W,H)/2-10;
+  partitionTree(tree);
+  var maxDepth=0;
+  (function d(n){if(n.depth>maxDepth)maxDepth=n.depth;n.children.forEach(d);})(tree);
+  var ringW=radius/Math.max(1,maxDepth);
+  var svg=svgEl('svg',{class:'chart-svg',viewBox:'0 0 '+W+' '+H,width:W,height:H});
+  var rootVal=tree.value;
+  var nameT=svgEl('text',{class:'center-name',x:cx,y:cy-6,'text-anchor':'middle'});
+  var valT=svgEl('text',{class:'center-val',x:cx,y:cy+12,'text-anchor':'middle'});
+  var pairs=[];
+  function setCenter(n){
+    if(n){nameT.textContent=n.name;valT.textContent=fmtAmt(n.signedValue)+' ('+(n.value/rootVal*100).toFixed(1)+'%)';}
+    else{
+      var single=tree.children.length===1;
+      nameT.textContent=single?tree.children[0].name:'Total';
+      valT.textContent=fmtAmt(single?tree.children[0].signedValue:tree.children.reduce(function(s,c){return s+c.signedValue;},0));
+    }
+  }
+  function related(a,b){return a===b||a.indexOf(b+':')===0||b.indexOf(a+':')===0;}
+  function dim(n){pairs.forEach(function(pr){pr[0].setAttribute('opacity',related(n.fullName,pr[1].fullName)?'1':'0.5');});}
+  function undim(){pairs.forEach(function(pr){pr[0].setAttribute('opacity','1');});}
+  tree.children.forEach(function(top){
+    (function w(n,topName){
+      var d=n.depth,r0=(d-1)*ringW,r1=d*ringW;
+      var a0=n.x0*Math.PI*2-Math.PI/2,a1=n.x1*Math.PI*2-Math.PI/2;
+      var p=svgEl('path',{class:'hier-node',d:arcPath(cx,cy,Math.max(r0,0),r1,a0,a1),fill:accountColor(topName)});
+      p.addEventListener('mouseenter',function(ev){setCenter(n);dim(n);});
+      p.addEventListener('mousemove',function(ev){tooltipShow(hierTip(n,rootVal),ev.clientX,ev.clientY);});
+      p.addEventListener('mouseleave',function(){setCenter(null);undim();tooltipHide();});
+      svg.appendChild(p);
+      pairs.push([p,n]);
+      n.children.forEach(function(ch){w(ch,topName);});
+    })(top,top.fullName);
+  });
+  setCenter(null);
+  svg.appendChild(nameT);
+  svg.appendChild(valT);
+  container.appendChild(svg);
+}
+
+function renderIcicle(container,tree){
+  container.innerHTML='';
+  if(!hierHasData(tree)){hierEmpty(container);return;}
+  var W=container.clientWidth||(container.getBoundingClientRect&&container.getBoundingClientRect().width)||900;
+  var H=Math.min(W/2.5,400);
+  partitionTree(tree);
+  var maxDepth=0;
+  (function d(n){if(n.depth>maxDepth)maxDepth=n.depth;n.children.forEach(d);})(tree);
+  var colW=W/Math.max(1,maxDepth);
+  var svg=svgEl('svg',{class:'chart-svg',viewBox:'0 0 '+W+' '+H,width:W,height:H});
+  var rootVal=tree.value;
+  var pairs=[];
+  function related(a,b){return a===b||a.indexOf(b+':')===0||b.indexOf(a+':')===0;}
+  function dim(n){pairs.forEach(function(pr){pr[0].setAttribute('opacity',related(n.fullName,pr[1].fullName)?'1':'0.5');});}
+  function undim(){pairs.forEach(function(pr){pr[0].setAttribute('opacity','1');});}
+  tree.children.forEach(function(top){
+    (function w(n,topName){
+      var d=n.depth,x=(d-1)*colW,y=n.x0*H,h=(n.x1-n.x0)*H,w2=colW-2;
+      var r=svgEl('rect',{class:'hier-node',x:x,y:y,width:w2,height:h,fill:accountColor(topName)});
+      r.addEventListener('mouseenter',function(ev){dim(n);});
+      r.addEventListener('mousemove',function(ev){tooltipShow(hierTip(n,rootVal),ev.clientX,ev.clientY);});
+      r.addEventListener('mouseleave',function(){undim();tooltipHide();});
+      svg.appendChild(r);
+      pairs.push([r,n]);
+      var fits=h>=14;
+      var t=svgEl('text',{x:x+w2/2,y:y+h/2,'text-anchor':'middle','dominant-baseline':'middle',visibility:fits?'visible':'hidden'});
+      t.textContent=n.name;
+      svg.appendChild(t);
+      n.children.forEach(function(ch){w(ch,topName);});
+    })(top,top.fullName);
+  });
+  container.appendChild(svg);
+}
+
+function renderHierarchy(container,tree){
+  if(chartState.hierMode==='sunburst')renderSunburst(container,tree);
+  else if(chartState.hierMode==='icicle')renderIcicle(container,tree);
+  else renderTreemap(container,tree);
+}
+
+// ── ACCOUNT DRILL-DOWN ────────────────────────────
+var drillAcct=null;
+function openDrill(accountName){
+  if(!allTxns.length)return;
+  drillAcct=accountName;
+  document.getElementById('drill-title').textContent=accountName;
+  document.getElementById('drill-modal').classList.add('open');
+  renderDrill();
+}
+function closeDrill(){
+  document.getElementById('drill-modal').classList.remove('open');
+  drillAcct=null;
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrill();});
+function setDrillMode(key,val){
+  chartState[key]=val;
+  saveChartState();
+  renderDrill();
+}
+function renderDrill(){
+  if(!drillAcct)return;
+  var series=buildAccountBalanceSeries(drillAcct);
+  var bal=series.length?series[series.length-1].value:0;
+  var balEl=document.getElementById('drill-balance');
+  if(balEl)balEl.textContent='balance '+fmtAmt(bal);
+  var dl=document.getElementById('drill-lm-line'),da=document.getElementById('drill-lm-area');
+  if(dl)dl.classList.toggle('active',chartState.lineMode==='line');
+  if(da)da.classList.toggle('active',chartState.lineMode==='area');
+  var ht=document.getElementById('drill-hm-treemap'),hs=document.getElementById('drill-hm-sunburst'),hi=document.getElementById('drill-hm-icicle');
+  if(ht)ht.classList.toggle('active',chartState.hierMode==='treemap');
+  if(hs)hs.classList.toggle('active',chartState.hierMode==='sunburst');
+  if(hi)hi.classList.toggle('active',chartState.hierMode==='icicle');
+  renderLineChart(document.getElementById('drill-line'),series,{mode:chartState.lineMode});
+  renderHierarchy(document.getElementById('drill-hier'),buildAccountTree([drillAcct.toLowerCase()]));
+}
+
+// ── DASHBOARD ──────────────────────────────────────
+function renderDashboard(){
+  var emptyEl=document.getElementById('dash-empty'),sections=document.getElementById('dash-sections');
+  if(!emptyEl||!sections)return;
+  if(!allTxns.length){
+    emptyEl.style.display='';sections.style.display='none';
+    return;
+  }
+  emptyEl.style.display='none';sections.style.display='';
+  // sync toolbar controls with chart state
+  var intSel=document.getElementById('dash-interval');
+  if(intSel)intSel.value=chartState.interval;
+  var lmLine=document.getElementById('dash-lm-line'),lmArea=document.getElementById('dash-lm-area');
+  if(lmLine)lmLine.classList.toggle('active',chartState.lineMode==='line');
+  if(lmArea)lmArea.classList.toggle('active',chartState.lineMode==='area');
+  // income vs expenses section
+  var incSec=document.getElementById('dash-incexp-section');
+  if(incSec){
+    incSec.style.display='';
+    if(!document.getElementById('dash-incexp')){
+      incSec.innerHTML='<div class="chart-title">Income vs Expenses</div>'+
+        '<div class="chart-subtitle">per interval, netted by account</div>'+
+        '<div class="chart-toolbar">'+
+        '<button class="qd" id="dash-bm-stacked" onclick="setChartState(\'barMode\',\'stacked\')">Stacked</button>'+
+        '<button class="qd" id="dash-bm-single" onclick="setChartState(\'barMode\',\'single\')">Single</button>'+
+        '</div><div id="dash-incexp"></div>';
+    }
+    var bmS=document.getElementById('dash-bm-stacked'),bmI=document.getElementById('dash-bm-single');
+    if(bmS)bmS.classList.toggle('active',chartState.barMode==='stacked');
+    if(bmI)bmI.classList.toggle('active',chartState.barMode==='single');
+    renderBarChart(document.getElementById('dash-incexp'),buildIncomeExpenseBars(chartState.interval),{mode:chartState.barMode});
+  }
+  // expenses/income hierarchy section
+  var hierSec=document.getElementById('dash-hier-section');
+  if(hierSec){
+    hierSec.style.display='';
+    if(!document.getElementById('dash-hier')){
+      hierSec.innerHTML='<div class="chart-title" id="dash-hier-title">Expenses</div>'+
+        '<div class="chart-subtitle">account hierarchy for the filtered period</div>'+
+        '<div class="chart-toolbar">'+
+        '<button class="qd" id="dash-hv-expenses" onclick="setChartState(\'hierView\',\'expenses\')">Expenses</button>'+
+        '<button class="qd" id="dash-hv-income" onclick="setChartState(\'hierView\',\'income\')">Income</button>'+
+        '<div class="fsep"></div>'+
+        '<button class="qd" id="dash-hm-treemap" onclick="setChartState(\'hierMode\',\'treemap\')">Treemap</button>'+
+        '<button class="qd" id="dash-hm-sunburst" onclick="setChartState(\'hierMode\',\'sunburst\')">Sunburst</button>'+
+        '<button class="qd" id="dash-hm-icicle" onclick="setChartState(\'hierMode\',\'icicle\')">Icicle</button>'+
+        '</div><div id="dash-hier"></div>';
+    }
+    var isExp=chartState.hierView!=='income';
+    var hvE=document.getElementById('dash-hv-expenses'),hvI=document.getElementById('dash-hv-income');
+    if(hvE)hvE.classList.toggle('active',isExp);
+    if(hvI)hvI.classList.toggle('active',!isExp);
+    var hmT=document.getElementById('dash-hm-treemap'),hmS=document.getElementById('dash-hm-sunburst'),hmI2=document.getElementById('dash-hm-icicle');
+    if(hmT)hmT.classList.toggle('active',chartState.hierMode==='treemap');
+    if(hmS)hmS.classList.toggle('active',chartState.hierMode==='sunburst');
+    if(hmI2)hmI2.classList.toggle('active',chartState.hierMode==='icicle');
+    var hTitle=document.getElementById('dash-hier-title');
+    if(hTitle)hTitle.textContent=isExp?'Expenses':'Income';
+    var hPxs=isExp?getUsedPrefixes(allTxns,['expenses','expense','exp']):getUsedPrefixes(allTxns,['income','revenue','revenues','inc']);
+    renderHierarchy(document.getElementById('dash-hier'),buildAccountTree(hPxs));
+  }
+  // quick stats row
+  var stats=document.getElementById('dash-stats');
+  if(stats){
+    function sumPrefixes(pxs){
+      var raw=buildRawBals(filtered,pxs);
+      return Object.keys(raw).reduce(function(s,a){return s+raw[a];},0);
+    }
+    function statCard(label,val,cls){
+      return'<div class="stat-card"><span class="flabel">'+label+'</span><span class="stat-val '+(cls||'')+'">'+val+'</span></div>';
+    }
+    if(!filtered.length){
+      stats.innerHTML=['Total Assets','Total Liabilities','Net Worth','Total Income','Total Expenses','Net Income'].map(function(l){return statCard(l,'—','n-zero');}).join('');
+    }else{
+      var aP2=getUsedPrefixes(allTxns,['assets','asset','ass']);
+      var lP2=getUsedPrefixes(allTxns,['liabilities','liability','lia']);
+      var iP2=getUsedPrefixes(allTxns,['income','revenue','revenues','inc']);
+      var eP2=getUsedPrefixes(allTxns,['expenses','expense','exp']);
+      var ta=aP2.length?sumPrefixes(aP2):0;
+      var tl=lP2.length?sumPrefixes(lP2):0;
+      var nw=ta+tl;
+      var ti=iP2.length?-sumPrefixes(iP2):0;
+      var te=eP2.length?sumPrefixes(eP2):0;
+      var ni=ti-te;
+      stats.innerHTML=
+        statCard('Total Assets',fmtAmt(ta),nC(ta))+
+        statCard('Total Liabilities',fmtAmt(tl),nC(tl))+
+        statCard('Net Worth',fmtAmt(nw),nC(nw))+
+        statCard('Total Income',fmtAmt(ti),nC(ti))+
+        statCard('Total Expenses',fmtAmt(te),nC(te))+
+        statCard('Net Income',fmtAmt(ni),nC(ni));
+    }
+  }
+  renderLineChart(document.getElementById('dash-networth'),buildNetWorthSeries(chartState.interval),{mode:chartState.lineMode});
+}
+
+// resize: debounce, re-render active tab's charts
+var chartResizeT;
+window.addEventListener('resize',function(){
+  clearTimeout(chartResizeT);
+  chartResizeT=setTimeout(function(){
+    if(activeTab==='dashboard')renderDashboard();
+    else if(activeTab==='balancesheet')renderBS();
+    else if(activeTab==='pnl')renderPnL();
+  },150);
+});
 
 // ── NEW TRANSACTION ───────────────────────────────
 var ntPosts=[];
@@ -936,6 +1990,7 @@ function saveJournal(){
 }
 
 function toast(msg){var el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){el.classList.remove('show');},3000);}
+renderDashboard();
 </script>
 </body>
 </html>

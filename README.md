@@ -1,13 +1,23 @@
 # hledger-webuix
 web interface for editing/reporting on hledger plain text accounting files. 
 
-This is a single file HTML file that provides a web interface for hledger. Load the file in your browser, throw in your ledger data file and you get three tabs:
+This is a single file HTML file that provides a web interface for hledger. Load the file in your browser, throw in your ledger data file and you get four tabs:
 
 - one tab for the transactions. You can edit and append transactions
 - one tab for the balance sheet
-- one tab for the P&L.
+- one tab for the P&L
+- one **dashboard** tab with Fava-style charts: net worth over time, income vs expenses per month/quarter/year, and an expense/income breakdown as treemap, sunburst or icicle
 
 That's it. Super simple, should be self-explanatory.
+
+## Charts
+
+- **Dashboard** — net worth line/area chart (daily to yearly granularity), income vs expenses stacked bars, expense or income hierarchy (treemap / sunburst / icicle switchable), and quick stats (total assets, liabilities, net worth, income, expenses, net income)
+- **Balance Sheet** — a collapsible account hierarchy chart above the table
+- **P&L** — a collapsible income vs expenses bar chart above the table
+- **Account drill-down** — click any account name in the balance sheet or P&L tables to see its balance over time and its sub-account hierarchy
+- All charts follow the filter bar (period, account, tag, free text) and remember your chart preferences locally
+- Everything is rendered with vanilla JS and inline SVG — no external JavaScript dependencies, works offline
 
 Please note:
 - I am in Europe and my ledger data files use 'EUR' as the currency symbol. There is a test ledger file bcexample.hledger available at https://github.com/simonmichael/hledger/blob/master/examples/bcexample.hledger, that file has 'USD' as currency. hledger-webuix seems to load this file without any complaints, but in the presentation it shows EUR instead of USD. The amounts seem to be correct, but still may need some work here...
