@@ -7,6 +7,7 @@ This is a single file HTML file that provides a web interface for hledger. Load 
 - one tab for the balance sheet
 - one tab for the P&L
 - one **dashboard** tab with Fava-style charts: net worth over time, income vs expenses per month/quarter/year, and an expense/income breakdown as treemap, sunburst or icicle
+- **Multi-currency** — every commodity is tracked per posting. Collapsed view values everything in one commodity (like `hledger -X cur --infer-market-prices`, prices from `P` directives and from the journal itself); Expanded view shows one commodity at a time. Toggle and commodity select are in the filter bar.
 
 That's it. Super simple, should be self-explanatory.
 
@@ -20,8 +21,8 @@ That's it. Super simple, should be self-explanatory.
 - Everything is rendered with vanilla JS and inline SVG — no external JavaScript dependencies, works offline
 
 Please note:
-- I am in Europe and my ledger data files use 'EUR' as the currency symbol. There is a test ledger file bcexample.hledger available at https://github.com/simonmichael/hledger/blob/master/examples/bcexample.hledger, that file has 'USD' as currency. hledger-webuix seems to load this file without any complaints, but in the presentation it shows EUR instead of USD. The amounts seem to be correct, but still may need some work here...
-- I have not implemented multi-currency.
+- I am in Europe and my ledger data files use 'EUR' as the currency symbol. There is a test ledger file bcexample.hledger available at https://github.com/simonmichael/hledger/blob/master/examples/bcexample.hledger, that file has 'USD' as currency. hledger-webuix loads this file without any complaints; each commodity is displayed in its own symbol.
+- Multi-currency is supported; select the main journal together with the journals it includes (and an optional price journal) so `include` lines resolve. Saving writes a single flattened file.
 - my accounts start with ass: lia: inc: exp. I am not sure if that is standard hledger lingo, but it is what I use at the moment. I may need to change that for others to use this web-interface, not sure. The test file bcexample.hledger uses Assets: Liabilities: Income: Expense: and this seems to work fine as well, no parsing errors.
 - my dates are in 2026/01/31 format. I think my regexp also parses 2026-01-31.
 - functionality is a subset of hledger CLI and hledger-ui.

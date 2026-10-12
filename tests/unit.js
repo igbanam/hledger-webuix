@@ -844,6 +844,540 @@ test('renderDashboard: filter-excludes-all -> em-dash stats and empty chart mess
   vm.runInContext('filtered = allTxns.slice();', sandbox);
 });
 
+// ══════════════════════════════════════════════════════════════════
+// MULTI-COMMODITY helpers + fixtures
+// ══════════════════════════════════════════════════════════════════
+const FX = n => fs.readFileSync(path.join(__dirname, 'fixtures', n), 'utf8');
+const ORACLE = JSON.parse(fs.readFileSync(path.join(__dirname, 'oracle', 'multicurrency.json'), 'utf8'));
+function useText(text) {
+  sandbox.__T__ = text;
+  vm.runInContext('allTxns = parseJournal(__T__); filtered = allTxns.slice();', sandbox);
+}
+function loadFiles(names) {
+  if (typeof sandbox.combineJournals === 'function') {
+    const files = {}; names.forEach(n => { files[n] = FX(n); });
+    useText(sandbox.combineJournals(files).text);
+  } else useText(FX(names[0]));
+}
+function setView(mode, cur) {
+  sandbox.__M__ = mode; sandbox.__C__ = cur;
+  vm.runInContext('chartState.cmMode = __M__; chartState.cmCur = __C__;', sandbox);
+}
+
+test('fixtures: reference journal and oracle are present', () => {
+  assert.ok(FX('multicurrency.journal').indexOf('commodity €1,000.00') !== -1);
+  assert.ok(ORACLE.sets['multicurrency+prices'].prices.length >= 12);
+  assert.ok(Math.abs(ORACLE.sets.multicurrency.valued['€|2025-12-31']['assets:bank:checking'] - 12883.88) < 0.01);
+});
+
+test('parseAmountFull: prefix, suffix, signs, quoted, thousands', () => {
+  const p = sandbox.parseAmountFull;
+  let a = p('€5000.00'); assert.strictEqual(a.qty, 5000); assert.strictEqual(a.commodity, '€'); assert.strictEqual(a.style.side, 'L'); assert.strictEqual(a.style.decimals, 2);
+  a = p('20 XDWD'); assert.strictEqual(a.qty, 20); assert.strictEqual(a.commodity, 'XDWD'); assert.strictEqual(a.style.side, 'R'); assert.strictEqual(a.style.spaced, true);
+  a = p('$-250.00'); assert.strictEqual(a.qty, -250); assert.strictEqual(a.commodity, '$');
+  a = p('-€5'); assert.strictEqual(a.qty, -5); assert.strictEqual(a.commodity, '€');
+  a = p('EUR -1000'); assert.strictEqual(a.qty, -1000); assert.strictEqual(a.commodity, 'EUR');
+  a = p('0.15000000 BTC'); assert.strictEqual(a.style.decimals, 8);
+  a = p('$1,500.00'); assert.strictEqual(a.qty, 1500);
+  a = p('10 "AAPL 2024"'); assert.strictEqual(a.commodity, 'AAPL 2024');
+  a = p('100'); assert.strictEqual(a.qty, 100); assert.strictEqual(a.commodity, '');
+  assert.strictEqual(p(''), null); assert.strictEqual(p('abc'), null);
+});
+
+test('parseAmount wrapper still returns a bare number', () => {
+  assert.strictEqual(sandbox.parseAmount('€-925.00'), -925);
+  assert.strictEqual(sandbox.parseAmount(''), null);
+});
+
+test('parsePostingAmount: @ unit cost, @@ total cost, balance assertion dropped', () => {
+  let r = sandbox.parsePostingAmount('8 XDWD @ €112.30');
+  assert.strictEqual(r.amount, 8); assert.strictEqual(r.commodity, 'XDWD');
+  assert.strictEqual(r.cost.commodity, '€'); assert.ok(Math.abs(r.cost.unit - 112.3) < 1e-9);
+  r = sandbox.parsePostingAmount('0.5 BTC @@ €20000');
+  assert.ok(Math.abs(r.cost.unit - 40000) < 1e-9);
+  r = sandbox.parsePostingAmount('€100.00 = €500.00');
+  assert.strictEqual(r.amount, 100); assert.strictEqual(r.cost, null);
+});
+
+test('edge.journal: postings typed, registry in first-seen order, directive style wins', () => {
+  useText(FX('edge.journal'));
+  const t0 = sandbox.allTxns.find(t => t.desc === 'Quoted commodity with total cost');
+  assert.strictEqual(t0.postings[0].commodity, 'AAPL 2024');
+  assert.ok(Math.abs(t0.postings[0].cost.unit - 150) < 1e-9);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(sandbox.commodities.order)).slice(0, 4), ['AAPL 2024', '$', 'BTC', '€']);
+  assert.strictEqual(sandbox.commodities.style['BTC'].decimals, 8);
+  assert.strictEqual(sandbox.defaultCommodity(), 'AAPL 2024');
+  assert.strictEqual(sandbox.isMultiCommodity(), true);
+});
+
+test('auto-balance expands a blank posting per commodity', () => {
+  useText(FX('edge.journal'));
+  const t = sandbox.allTxns.find(t => t.desc === 'Blank posting over two commodities');
+  assert.strictEqual(t.postings.length, 4);
+  const cash = t.postings.filter(p => p.account === 'assets:cash');
+  assert.strictEqual(cash.length, 2);
+  const byC = {}; cash.forEach(p => { byC[p.commodity] = p.amount; });
+  assert.strictEqual(byC['€'], -5); assert.strictEqual(byC['$'], -7);
+  assert.ok(cash.every(p => p.autoBalanced));
+});
+
+test('auto-balance uses cost commodity for costed postings', () => {
+  useText('2026-01-01 Buy\n    assets:inv   8 XDWD @ €100\n    assets:cash\n');
+  const t = sandbox.allTxns[0];
+  assert.strictEqual(t.postings[1].commodity, '€'); assert.strictEqual(t.postings[1].amount, -800);
+});
+
+test('P and ~ lines never become transactions; P is collected', () => {
+  useText(FX('edge.journal'));
+  assert.strictEqual(sandbox.allTxns.length, 6);
+  assert.strictEqual(sandbox.parsedPrices.length, 1);
+  assert.strictEqual(sandbox.parsedPrices[0].from, 'BTC');
+  assert.strictEqual(sandbox.parsedPrices[0].to, '€');
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  assert.strictEqual(sandbox.allTxns.filter(t => /monthly/.test(t.desc)).length, 0);
+});
+
+test('reference journal: default commodity is €, six commodities, registry decimals', () => {
+  useText(FX('multicurrency.journal'));
+  assert.strictEqual(sandbox.defaultCommodity(), '€');
+  assert.strictEqual(sandbox.commodities.order.length, 6);
+  assert.strictEqual(sandbox.commodities.style['BTC'].decimals, 8);
+  assert.strictEqual(sandbox.commodities.style['XDWD'].decimals, 4);
+});
+
+test('single.journal: single commodity, no multi-commodity mode', () => {
+  useText(FX('single.journal'));
+  assert.strictEqual(sandbox.isMultiCommodity(), false);
+});
+
+test('fmtAmt: per-commodity symbol, side and precision', () => {
+  useText(FX('multicurrency.journal'));
+  assert.ok(sandbox.fmtAmt(0.225, 'BTC').indexOf('0,22500000') !== -1, sandbox.fmtAmt(0.225, 'BTC'));
+  assert.ok(sandbox.fmtAmt(0.225, 'BTC').indexOf('BTC') !== -1);
+  assert.ok(sandbox.fmtAmt(1234.5, '€').indexOf('1.234,50') !== -1);
+  assert.ok(/^€/.test(sandbox.fmtAmt(5, '€')));
+  assert.ok(sandbox.fmtAmt(39, 'XDWD').indexOf('39,0000') !== -1);
+});
+
+test('combineJournals: resolves include by basename, sibling P file loaded as a second root', () => {
+  const files = {
+    'multicurrency.journal': FX('multicurrency.journal'),
+    'budget.journal': FX('budget.journal'),
+    'recurring.journal': FX('recurring.journal'),
+    'multicurrency-prices.journal': FX('multicurrency-prices.journal'),
+  };
+  const r = sandbox.combineJournals(files);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(r.roots)).sort(), ['multicurrency-prices.journal', 'multicurrency.journal']);
+  assert.strictEqual(r.missing.length, 0);
+  assert.ok(r.text.indexOf('~ monthly') !== -1, 'budget content inlined');
+  assert.ok(r.text.indexOf('P 2025-07-01 BTC') !== -1, 'prices content present');
+});
+
+test('combineJournals: missing include is reported', () => {
+  const r = sandbox.combineJournals({ 'multicurrency.journal': FX('multicurrency.journal') });
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(r.missing)).sort(), ['budget.journal', 'recurring.journal']);
+});
+
+test('combineJournals: include cycle terminates', () => {
+  const r = sandbox.combineJournals({ 'a.journal': 'include b.journal\n', 'b.journal': 'include a.journal\n' });
+  assert.ok(typeof r.text === 'string');
+  assert.ok(r.roots.length >= 1);
+});
+
+test('loaded set with prices journal gains P directives', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal', 'multicurrency-prices.journal']);
+  assert.ok(sandbox.parsedPrices.length >= 20);
+});
+
+test('loadFile: multi-file selection is processed in selection order regardless of read completion order', () => {
+  const orig = sandbox.FileReader, pending = [];
+  sandbox.FileReader = function () {
+    const self = this;
+    this.readAsText = function (f) { pending.push(() => self.onload({ target: { result: f.name === 'a.journal' ? '2026-01-01 A\n    x  1\n    y\n' : '2026-01-02 B\n    x  1\n    y\n' } })); };
+  };
+  try {
+    sandbox.loadFile({ target: { files: [{ name: 'a.journal' }, { name: 'b.journal' }], value: '' } });
+    pending.reverse().forEach(fn => fn());
+  } finally { sandbox.FileReader = orig; }
+  assert.strictEqual(sandbox.loadedFileName, 'a.journal');
+});
+
+test('prices: inferred edges match hledger (reference journal, no price file)', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  const want = ORACLE.sets.multicurrency.prices;
+  const got = JSON.parse(JSON.stringify(sandbox.priceEdges));
+  want.forEach(w => {
+    const g = got.find(e => e.date === w.date && e.from === w.from && e.to === w.to);
+    assert.ok(g, 'missing edge ' + JSON.stringify(w));
+    assert.ok(Math.abs(g.rate - w.rate) / w.rate < 1e-6, 'rate ' + g.rate + ' vs ' + w.rate);
+  });
+  assert.strictEqual(got.length, want.length, 'no extra edges');
+});
+
+test('prices: with price file, directives + inferred match hledger', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal', 'multicurrency-prices.journal']);
+  const want = ORACLE.sets['multicurrency+prices'].prices;
+  const got = JSON.parse(JSON.stringify(sandbox.priceEdges));
+  want.forEach(w => {
+    const g = got.find(e => e.date === w.date && e.from === w.from && e.to === w.to && Math.abs(e.rate - w.rate) / w.rate < 1e-6);
+    assert.ok(g, 'missing edge ' + JSON.stringify(w));
+  });
+});
+
+test('priceLookup: latest on/before, reverse edge, chain, no look-ahead, no path', () => {
+  useText(FX('multicurrency.journal'));
+  const L = sandbox.priceLookup;
+  assert.ok(Math.abs(L('BTC', '€', '2025-07-12') - 60000) < 1e-6);
+  assert.ok(Math.abs(L('BTC', '€', '2025-09-09') - 60000) < 1e-6, 'latest on or before');
+  assert.ok(Math.abs(L('BTC', '€', '2025-09-10') - 55000) < 1e-6, 'inclusive of price date');
+  assert.strictEqual(L('BTC', '€', '2025-07-11'), null, 'no look-ahead');
+  assert.ok(Math.abs(L('€', 'BTC', '2025-07-12') - 1 / 60000) < 1e-12, 'reverse edge');
+  assert.ok(L('BTC', '$', '2025-10-11') > 0, 'chained BTC -> € -> $');
+  assert.strictEqual(L('€', '€', '2020-01-01'), 1);
+});
+
+test('priceLookup: orphan commodity has no path', () => {
+  useText(FX('edge.journal'));
+  assert.strictEqual(sandbox.priceLookup('XYZ', '€', '2026-12-31'), null);
+});
+
+test('price inference: not for three commodities, same sign, or costed postings', () => {
+  useText(FX('edge.journal'));
+  const e = JSON.parse(JSON.stringify(sandbox.priceEdges));
+  assert.strictEqual(e.filter(x => x.date === '2026-01-05').length, 0, 'three commodities');
+  assert.strictEqual(e.filter(x => x.date === '2026-01-07').length, 0, 'same sign');
+  assert.strictEqual(e.filter(x => x.date === '2026-01-06').length, 0, 'blank posting balances per commodity');
+  assert.ok(e.some(x => x.date === '2026-01-03' && x.from === 'BTC' && Math.abs(x.rate - 40000) < 1e-6), '@@ cost edge');
+});
+
+test('viewValue: expanded filters, collapsed converts, unvalued is null', () => {
+  useText(FX('multicurrency.journal'));
+  setView('expanded', 'BTC');
+  assert.strictEqual(sandbox.viewValue('BTC', 0.5, '2025-12-31'), 0.5);
+  assert.strictEqual(sandbox.viewValue('€', 100, '2025-12-31'), null);
+  setView('collapsed', '€');
+  assert.ok(Math.abs(sandbox.viewValue('BTC', 0.5, '2025-12-31') - 32500) < 1e-6);
+  assert.strictEqual(sandbox.viewValue('€', 7, '2025-12-31'), 7);
+  setView('collapsed', '');
+});
+
+test('viewNotes: hidden count in expanded, unvalued by commodity in collapsed', () => {
+  useText(FX('edge.journal'));
+  setView('expanded', '€');
+  const n1 = sandbox.viewNotes(sandbox.allTxns, '2026-12-31');
+  assert.ok(n1.hidden > 0);
+  setView('collapsed', '€');
+  const n2 = sandbox.viewNotes(sandbox.allTxns, '2026-12-31');
+  assert.ok(n2.unvalued['XYZ'] >= 1);
+  assert.ok(/XYZ/.test(sandbox.viewNoteText(sandbox.allTxns, '2026-12-31')));
+  setView('collapsed', '');
+});
+
+test('single-commodity journal: viewAmount is the identity and notes are empty', () => {
+  useText(FX('single.journal'));
+  const p = sandbox.allTxns[1].postings[0];
+  assert.strictEqual(sandbox.viewAmount(p, '2026-01-31'), p.amount);
+  assert.strictEqual(sandbox.viewNoteText(sandbox.allTxns, '2026-01-31'), '');
+});
+
+function compareBalances(got, want, label) {
+  Object.keys(want).forEach(a => {
+    assert.ok(a in got, label + ': missing account ' + a);
+    assert.ok(Math.abs(got[a] - want[a]) < 0.011, label + ' ' + a + ': ' + got[a] + ' vs ' + want[a]);
+  });
+  Object.keys(got).forEach(a => {
+    if (Math.abs(got[a]) > 0.006) assert.ok(a in want, label + ': unexpected account ' + a + '=' + got[a]);
+  });
+}
+Object.keys(ORACLE.sets).forEach(setName => {
+  const set = ORACLE.sets[setName];
+  const names = ['multicurrency.journal', 'budget.journal', 'recurring.journal'];
+  if (set.files.indexOf('multicurrency-prices.journal') >= 0) names.push('multicurrency-prices.journal');
+  Object.keys(set.valued).forEach(key => {
+    test('oracle valued (' + setName + ') ' + key, () => {
+      const [cur, asOf] = key.split('|');
+      loadFiles(names); setView('collapsed', cur);
+      const txns = sandbox.allTxns.filter(t => t.date <= asOf);
+      compareBalances(sandbox.buildRawBals(txns, null, asOf), set.valued[key], key);
+      setView('collapsed', '');
+    });
+  });
+  Object.keys(set.raw).forEach(key => {
+    test('oracle raw (' + setName + ') ' + key, () => {
+      const [cur, asOf] = key.split('|');
+      loadFiles(names); setView('expanded', cur);
+      const txns = sandbox.allTxns.filter(t => t.date <= asOf);
+      compareBalances(sandbox.buildRawBals(txns, null, asOf), set.raw[key], key);
+      setView('collapsed', '');
+    });
+  });
+});
+
+test('net worth series is valued at each bucket end (history uses then-prices)', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  setView('collapsed', '€');
+  const s = JSON.parse(JSON.stringify(sandbox.buildNetWorthSeries('month')));
+  assert.ok(s.length >= 6);
+  const last = s[s.length - 1];
+  const o = ORACLE.sets.multicurrency.valued['€|2025-12-31'];
+  const nw = Object.keys(o).filter(a => /^(assets|liabilities):/.test(a)).reduce((x, a) => x + o[a], 0);
+  assert.ok(Math.abs(last.value - nw) < 0.05, last.value + ' vs ' + nw);
+  setView('collapsed', '');
+});
+
+test('expanded BTC: rounding and thresholds keep 8-decimal quantities', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  setView('expanded', 'BTC');
+  assert.ok(Math.abs(sandbox.rnd(0.12345678) - 0.12345678) < 1e-12);
+  assert.ok(sandbox.eps() < 1e-8);
+  const s = JSON.parse(JSON.stringify(sandbox.buildNetWorthSeries('month')));
+  assert.ok(Math.abs(s[s.length - 1].value - 0.225) < 1e-9, String(s[s.length - 1].value));
+  setView('collapsed', '');
+});
+
+test('single-commodity journal: builders unchanged (net worth, bars)', () => {
+  useText(FX('single.journal'));
+  const nw = JSON.parse(JSON.stringify(sandbox.buildNetWorthSeries('month')));
+  assert.strictEqual(nw[nw.length - 1].value, 2950);
+  const b = JSON.parse(JSON.stringify(sandbox.buildIncomeExpenseBars('month')));
+  assert.strictEqual(b.income[0][0].value, 2000);
+  assert.strictEqual(b.expenses[0][0].value, 50);
+});
+
+test('activeCommodity falls back to the default when the saved one is absent', () => {
+  useText(FX('multicurrency.journal'));
+  setView('collapsed', 'NOPE');
+  assert.strictEqual(sandbox.activeCommodity(), '€');
+  setView('collapsed', '');
+});
+
+test('dashboard: collapsed note names unvalued commodity; expanded relabels net holdings', () => {
+  useText(FX('edge.journal'));
+  vm.runInContext('filtered = allTxns.slice();', sandbox);
+  setView('collapsed', '€');
+  sandbox.renderDashboard();
+  assert.ok((elCache['dash-view-note'].textContent || '').indexOf('XYZ') !== -1, elCache['dash-view-note'].textContent);
+  setView('expanded', 'BTC');
+  sandbox.renderDashboard();
+  assert.ok((elCache['dash-stats'].innerHTML || '').indexOf('Net holdings (BTC)') !== -1);
+  assert.ok((elCache['dash-view-note'].textContent || '').indexOf('hidden') !== -1);
+  setView('collapsed', '');
+});
+
+test('dashboard: expanded commodity with no postings in range shows empty states', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  setView('expanded', 'XEON');
+  vm.runInContext('filtered = allTxns.filter(function(t){return t.date > "2025-07-01" && t.date <= "2025-08-11";});', sandbox);
+  sandbox.renderDashboard();
+  assert.ok((elCache['dash-networth'].innerHTML || '').indexOf('chart-empty') !== -1);
+  assert.ok((elCache['dash-stats'].innerHTML || '').indexOf('—') !== -1);
+  vm.runInContext('filtered = allTxns.slice();', sandbox);
+  setView('collapsed', '');
+});
+
+test('dashboard: single-commodity journal shows no note and no controls', () => {
+  useText(FX('single.journal'));
+  sandbox.renderDashboard();
+  assert.strictEqual(elCache['dash-view-note'].textContent || '', '');
+  assert.strictEqual(elCache['cm-ctl'].style.display, 'none');
+});
+
+test('transactions list: header amount uses the posting commodity', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  sandbox.renderTxns();
+  const h = elCache['txn-list'].innerHTML;
+  assert.ok(h.indexOf('BTC') !== -1 && h.indexOf('£') !== -1 && h.indexOf('$') !== -1);
+});
+
+test('P&L / BS: view note is rendered above the tables', () => {
+  useText(FX('edge.journal'));
+  setView('collapsed', '€');
+  sandbox.renderBS();
+  assert.ok((elCache['bs-view-note'].textContent || '').indexOf('XYZ') !== -1);
+  sandbox.renderPnL();
+  assert.ok(typeof elCache['pnl-view-note'].textContent === 'string');
+  setView('collapsed', '');
+});
+
+test('setChartState re-syncs commodity controls on any tab', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  setView('collapsed', '');
+  sandbox.setChartState('cmMode', 'expanded');
+  assert.ok(elCache['cm-expanded'].classList.contains('active'));
+  assert.ok(!elCache['cm-collapsed'].classList.contains('active'));
+  sandbox.setChartState('cmMode', 'collapsed');
+  setView('collapsed', '');
+});
+
+test('save round-trip: untouched postings keep amountStr, directives are re-emitted', () => {
+  useText(FX('edge.journal'));
+  const out = sandbox.serializeJournal();
+  assert.ok(out.indexOf('10 "AAPL 2024" @@ $1,500.00') !== -1, 'cost + quoted commodity kept');
+  assert.ok(out.indexOf('P 2026-01-10 BTC €40000') !== -1, 'P directive kept');
+  assert.ok(out.indexOf('commodity 0.00000000 BTC') !== -1, 'commodity directive kept');
+  useText(out);
+  const t0 = sandbox.allTxns.find(t => t.desc === 'Quoted commodity with total cost');
+  assert.strictEqual(t0.postings[0].commodity, 'AAPL 2024');
+  assert.strictEqual(sandbox.parsedPrices.length, 1);
+});
+
+test('save: unparseable P line is still re-emitted', () => {
+  useText('P 2026-01-01 FOO\n\n2026-01-02 x\n    a  1\n    b\n');
+  assert.ok(sandbox.serializeJournal().indexOf('P 2026-01-01 FOO') !== -1);
+});
+
+test('save: edited amount is written in its own commodity, not the sniffed symbol', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  const t = sandbox.allTxns.find(t => t.desc === 'USD freelance payment');
+  const idx = t.postings.findIndex(p => p.commodity === '$');
+  sandbox.updPost(t.id, idx, 'amount', '1750');
+  const out = sandbox.serializeJournal();
+  assert.ok(/assets:bank:savings\s+\$1750/.test(out), out.split('\n').filter(l => /savings/.test(l)).slice(0, 2).join('|'));
+  assert.ok(out.indexOf('€ 1750') === -1);
+});
+
+test('formatPostingAmount: R-side and no-commodity postings', () => {
+  useText(FX('multicurrency.journal'));
+  assert.strictEqual(sandbox.formatPostingAmount({ amount: -0.025, commodity: 'BTC', amountStr: null }), '-0.025 BTC');
+  assert.strictEqual(sandbox.formatPostingAmount({ amount: 5, commodity: '', amountStr: null }), '5');
+});
+
+test('editing an amount refreshes inferred prices', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  const t = sandbox.allTxns.find(t => t.desc === 'Buy Bitcoin');
+  const before = sandbox.priceLookup('BTC', '€', '2025-07-12');
+  const i = t.postings.findIndex(p => p.commodity === 'BTC');
+  sandbox.updPost(t.id, i, 'amount', '0.05');
+  const after = sandbox.priceLookup('BTC', '€', '2025-07-12');
+  assert.ok(Math.abs(after - before / 2) / before < 0.01, before + ' -> ' + after);
+});
+
+test('edited posting keeps @@ cost; total stays, unit recomputed', () => {
+  useText(FX('edge.journal'));
+  const t = sandbox.allTxns.find(t => t.desc === 'Quoted commodity with total cost');
+  sandbox.updPost(t.id, 0, 'amount', '12');
+  const out = sandbox.serializeJournal();
+  assert.ok(/12 "AAPL 2024" @@ \$1,500\.00/.test(out), out);
+  assert.ok(Math.abs(sandbox.priceLookup('AAPL 2024', '$', t.date) - 125) < 0.01);
+});
+
+test('edited posting keeps @ cost', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  const t = sandbox.allTxns.find(t => t.desc === 'Buy XDWD ETF');
+  const i = t.postings.findIndex(p => p.commodity === 'XDWD');
+  sandbox.updPost(t.id, i, 'amount', '9');
+  const out = sandbox.serializeJournal();
+  assert.ok(/9 XDWD @ €112\.30/.test(out), out.split('\n').filter(l => /XDWD/.test(l)).slice(0, 3).join('|'));
+});
+
+test('inline-typed commodity is registered', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  const t = sandbox.allTxns.find(t => t.desc === 'Buy XDWD ETF');
+  const i = t.postings.findIndex(p => p.commodity === 'XDWD');
+  sandbox.updPost(t.id, i, 'commodity', 'ZZZ');
+  assert.ok(sandbox.commodities.order.indexOf('ZZZ') !== -1);
+});
+
+// ── FINAL REVIEW FIXES ──
+test('final-1: declared P beats inferred price on the same date', () => {
+  useText('P 2025-07-01 BTC €60000\n\n2025-07-01 buy\n    Assets:BTC  0.1 BTC @ €62000\n    Assets:Cash  €-6200\n');
+  assert.strictEqual(sandbox.priceLookup('BTC', '€', '2025-07-01'), 60000);
+});
+
+test('final-2: unspaced @ cost parses', () => {
+  useText('2025-07-01 buy\n    Assets:X  8 XDWD @€100\n    Assets:Cash\n');
+  const t = sandbox.allTxns[0];
+  assert.strictEqual(t.postings[0].amount, 8);
+  assert.strictEqual(t.postings[0].commodity, 'XDWD');
+  assert.strictEqual(t.postings[0].cost.unit, 100);
+  assert.strictEqual(t.postings[0].cost.commodity, '€');
+  assert.ok(t.postings[0].cost.text.indexOf('@') === -1, t.postings[0].cost.text);
+  assert.strictEqual(t.postings[1].amount, -800);
+  assert.strictEqual(t.postings[1].commodity, '€');
+});
+
+test('final-3: drill headline balance matches the table valuation', () => {
+  loadFiles(['multicurrency.journal', 'multicurrency-prices.journal']);
+  setView('collapsed', '€');
+  vm.runInContext("drillAcct = 'assets:crypto:wallet';", sandbox);
+  sandbox.renderDrill();
+  const want = ORACLE.sets['multicurrency+prices'].valued['€|2025-12-31']['assets:crypto:wallet'];
+  const txt = elCache['drill-balance'].textContent;
+  assert.ok(/15[.,]750[.,]00/.test(txt), txt + ' (oracle ' + want + ')');
+  setView('collapsed', '');
+  vm.runInContext("drillAcct = null;", sandbox);
+});
+
+test('final-4: unresolved include is kept on save; resolved ones are inlined', () => {
+  const files = { 'multicurrency.journal': FX('multicurrency.journal') };
+  const part = sandbox.combineJournals(files);
+  useText(part.text);
+  const out = sandbox.serializeJournal();
+  assert.ok(/^include budget\.journal$/m.test(out), 'budget');
+  assert.ok(/^include recurring\.journal$/m.test(out), 'recurring');
+  const all = {}; ['multicurrency.journal', 'budget.journal', 'recurring.journal'].forEach(n => { all[n] = FX(n); });
+  useText(sandbox.combineJournals(all).text);
+  assert.ok(!/^include\b/m.test(sandbox.serializeJournal()));
+});
+
+test('final-5: zero cost rate creates no edge, no Infinity', () => {
+  useText('2025-07-01 gift\n    Assets:X  10 AAPL @ $0\n    Assets:Cash  $0\n\n2025-07-02 x\n    Assets:Y  $5\n    Income:Z  $-5\n');
+  assert.strictEqual(sandbox.priceLookup('AAPL', '$', '2025-12-31'), null);
+  assert.strictEqual(sandbox.priceLookup('$', 'AAPL', '2025-12-31'), null);
+  const raw = JSON.stringify(sandbox.buildRawBals(sandbox.allTxns, null));
+  assert.ok(!/Infinity|NaN|null/.test(raw), raw);
+});
+
+test('final-6: lot and date annotations are stripped', () => {
+  useText('2025-07-01 buy\n    Assets:X  10 AAPL {$5}\n    Assets:Y  3 MSFT [2024-01-01]\n    Assets:Cash  $-80\n');
+  const p = sandbox.allTxns[0].postings;
+  assert.strictEqual(p[0].amount, 10);
+  assert.strictEqual(p[0].commodity, 'AAPL');
+  assert.strictEqual(p[1].amount, 3);
+  assert.strictEqual(p[1].commodity, 'MSFT');
+});
+
+test('final-7: editing a costed txn date moves its price edge', () => {
+  useText('2025-07-01 buy\n    Assets:X  8 XDWD @ €100\n    Assets:Cash\n');
+  assert.strictEqual(sandbox.priceLookup('XDWD', '€', '2025-07-01'), 100);
+  sandbox.updTxn(sandbox.allTxns[0].id, 'date', '2025-08-01');
+  assert.strictEqual(sandbox.priceLookup('XDWD', '€', '2025-07-01'), null);
+  assert.strictEqual(sandbox.priceLookup('XDWD', '€', '2025-08-01'), 100);
+});
+
+test('final-7b: deleting a costed posting drops its edge', () => {
+  useText('2025-07-01 buy\n    Assets:X  8 XDWD @ €100\n    Assets:Cash  €-800\n    Assets:Z  €0\n');
+  assert.strictEqual(sandbox.priceLookup('XDWD', '€', '2025-07-01'), 100);
+  sandbox.delPost(sandbox.allTxns[0].id, 0);
+  assert.strictEqual(sandbox.priceLookup('XDWD', '€', '2025-07-01'), null);
+});
+
+test('final-8: unpadded dates are stored zero-padded', () => {
+  useText('2025/7/1 x\n    Assets:A  $5\n    Income:B  $-5\n');
+  assert.strictEqual(sandbox.allTxns[0].date, '2025-07-01');
+});
+
+test('final-10: empty state omits (none) for single-commodity journals', () => {
+  useText('2025-07-01 x\n    Assets:A  5\n    Income:B  -5\n');
+  vm.runInContext('filtered = [];', sandbox);
+  let ran = 0;
+  ['renderBS', 'renderPnL'].forEach(f => { sandbox[f](); ran++; });
+  assert.strictEqual(ran, 2);
+  const hit = Object.keys(elCache).filter(k => elCache[k].innerHTML.indexOf('No postings') !== -1);
+  assert.ok(hit.length > 0, 'empty state rendered');
+  hit.forEach(k => assert.ok(elCache[k].innerHTML.indexOf('(none)') === -1, k));
+});
+
+test('final-11: clearing the commodity field is ignored', () => {
+  loadFiles(['multicurrency.journal', 'budget.journal', 'recurring.journal']);
+  const before = JSON.stringify(sandbox.commodities.order);
+  const t = sandbox.allTxns.find(t => t.desc === 'Buy XDWD ETF');
+  const i = t.postings.findIndex(p => p.commodity === 'XDWD');
+  sandbox.updPost(t.id, i, 'commodity', '');
+  assert.strictEqual(JSON.stringify(sandbox.commodities.order), before);
+  assert.strictEqual(t.postings[i].commodity, 'XDWD');
+});
+
 tests.forEach(([name, fn]) => {
   try {
     fn();

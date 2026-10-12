@@ -1,0 +1,30 @@
+; Edge cases for multi-commodity parsing. Not meant for hledger itself.
+P 2026-01-10 BTC €40000
+commodity 1,000.00 "AAPL 2024"
+commodity 0.00000000 BTC
+
+2026-01-02 Quoted commodity with total cost
+    assets:broker      10 "AAPL 2024" @@ $1,500.00
+    assets:cash        $-1,500.00
+
+2026-01-03 Total cost in euro
+    assets:crypto      0.5 BTC @@ €20000
+    assets:cash        €-20000
+
+2026-01-04 Orphan commodity, no price path
+    assets:misc        100 XYZ
+    equity:open
+
+2026-01-05 Three commodities (must not infer a price)
+    assets:a           €10
+    assets:b           $12
+    assets:c           £-8
+
+2026-01-06 Blank posting over two commodities
+    expenses:mix       €5
+    expenses:mix       $7
+    assets:cash
+
+2026-01-07 Same sign pair (must not infer a price)
+    assets:d           €5
+    assets:e           $5

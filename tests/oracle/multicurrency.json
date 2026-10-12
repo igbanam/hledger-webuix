@@ -1,0 +1,950 @@
+{
+ "hledger": "hledger 1.52.4, mac-aarch64",
+ "sets": {
+  "multicurrency": {
+   "files": [
+    "multicurrency.journal"
+   ],
+   "valued": {
+    "€|2025-08-31": {
+     "assets:bank:checking": 6529.21,
+     "assets:bank:savings": 5301.18,
+     "assets:crypto:wallet": 10500,
+     "assets:investments:XDWD": 3144.4,
+     "assets:investments:XEON": 2832.9,
+     "equity:opening-balances": -21257.5,
+     "expenses:education": 184.08,
+     "expenses:food:groceries": 545.45,
+     "expenses:food:restaurant": 97,
+     "expenses:housing:rent": 1900,
+     "expenses:housing:utilities": 239.7,
+     "expenses:subscriptions": 50.84,
+     "expenses:transport": 110,
+     "income:freelance": -2779.5,
+     "income:salary": -7000,
+     "liabilities:credit-card": -397.75
+    },
+    "$|2025-08-31": {
+     "assets:bank:checking": 7058.61,
+     "assets:bank:savings": 5731,
+     "assets:crypto:wallet": 11351.35,
+     "assets:investments:XDWD": 3399.35,
+     "assets:investments:XEON": 3062.59,
+     "equity:opening-balances": -22981.08,
+     "expenses:education": 199,
+     "expenses:food:groceries": 589.68,
+     "expenses:food:restaurant": 104.86,
+     "expenses:housing:rent": 2054.05,
+     "expenses:housing:utilities": 259.14,
+     "expenses:subscriptions": 54.96,
+     "expenses:transport": 118.92,
+     "income:freelance": -3004.86,
+     "income:salary": -7567.57,
+     "liabilities:credit-card": -430
+    },
+    "£|2025-08-31": {
+     "assets:bank:checking": 5628.63,
+     "assets:bank:savings": 4569.98,
+     "assets:crypto:wallet": 9051.72,
+     "assets:investments:XDWD": 2710.69,
+     "assets:investments:XEON": 2442.16,
+     "equity:opening-balances": -18325.43,
+     "expenses:education": 158.69,
+     "expenses:food:groceries": 470.22,
+     "expenses:food:restaurant": 83.62,
+     "expenses:housing:rent": 1637.93,
+     "expenses:housing:utilities": 206.64,
+     "expenses:subscriptions": 43.82,
+     "expenses:transport": 94.83,
+     "income:freelance": -2396.12,
+     "income:salary": -6034.48,
+     "liabilities:credit-card": -342.89
+    },
+    "€|2025-11-30": {
+     "assets:bank:checking": 7920.56,
+     "assets:bank:savings": 9624.12,
+     "assets:crypto:wallet": 14625,
+     "assets:investments:XDWD": 5007.6,
+     "assets:investments:XEON": 3564,
+     "equity:opening-balances": -22305.5,
+     "expenses:education": 183.08,
+     "expenses:electronics": 1104,
+     "expenses:food:groceries": 1353.35,
+     "expenses:food:restaurant": 273,
+     "expenses:housing:rent": 4750,
+     "expenses:housing:utilities": 587.7,
+     "expenses:shopping": 150,
+     "expenses:subscriptions": 127.09,
+     "expenses:transport": 275,
+     "income:freelance": -8008,
+     "income:salary": -17500,
+     "liabilities:credit-card": -1125.2
+    },
+    "$|2025-11-30": {
+     "assets:bank:checking": 8609.3,
+     "assets:bank:savings": 10461,
+     "assets:crypto:wallet": 15896.74,
+     "assets:investments:XDWD": 5443.04,
+     "assets:investments:XEON": 3873.91,
+     "equity:opening-balances": -24245.11,
+     "expenses:education": 199,
+     "expenses:electronics": 1200,
+     "expenses:food:groceries": 1471.03,
+     "expenses:food:restaurant": 296.74,
+     "expenses:housing:rent": 5163.04,
+     "expenses:housing:utilities": 638.8,
+     "expenses:shopping": 163.04,
+     "expenses:subscriptions": 138.14,
+     "expenses:transport": 298.91,
+     "income:freelance": -8704.35,
+     "income:salary": -19021.74,
+     "liabilities:credit-card": -1223.04
+    },
+    "£|2025-11-30": {
+     "assets:bank:checking": 6828.07,
+     "assets:bank:savings": 8296.66,
+     "assets:crypto:wallet": 12607.76,
+     "assets:investments:XDWD": 4316.9,
+     "assets:investments:XEON": 3072.41,
+     "equity:opening-balances": -19228.88,
+     "expenses:education": 157.83,
+     "expenses:electronics": 951.72,
+     "expenses:food:groceries": 1166.68,
+     "expenses:food:restaurant": 235.34,
+     "expenses:housing:rent": 4094.83,
+     "expenses:housing:utilities": 506.64,
+     "expenses:shopping": 129.31,
+     "expenses:subscriptions": 109.56,
+     "expenses:transport": 237.07,
+     "income:freelance": -6903.45,
+     "income:salary": -15086.21,
+     "liabilities:credit-card": -970
+    },
+    "€|2025-12-31": {
+     "assets:bank:checking": 12883.88,
+     "assets:bank:savings": 9664.14,
+     "assets:crypto:wallet": 14625,
+     "assets:investments:XDWD": 5007.6,
+     "assets:investments:XEON": 4093.2,
+     "equity:opening-balances": -22352,
+     "expenses:education": 412.16,
+     "expenses:electronics": 1104,
+     "expenses:food:groceries": 1668.85,
+     "expenses:food:restaurant": 368,
+     "expenses:gifts": 370,
+     "expenses:housing:rent": 5700,
+     "expenses:housing:utilities": 724.5,
+     "expenses:shopping": 350,
+     "expenses:subscriptions": 154.67,
+     "expenses:transport": 330,
+     "income:freelance": -10276,
+     "income:interest": -11.5,
+     "income:salary": -22500,
+     "liabilities:credit-card": -1702.8
+    },
+    "$|2025-12-31": {
+     "assets:bank:checking": 14004.22,
+     "assets:bank:savings": 10504.5,
+     "assets:crypto:wallet": 15896.74,
+     "assets:investments:XDWD": 5443.04,
+     "assets:investments:XEON": 4449.13,
+     "equity:opening-balances": -24295.65,
+     "expenses:education": 448,
+     "expenses:electronics": 1200,
+     "expenses:food:groceries": 1813.97,
+     "expenses:food:restaurant": 400,
+     "expenses:gifts": 402.17,
+     "expenses:housing:rent": 6195.65,
+     "expenses:housing:utilities": 787.5,
+     "expenses:shopping": 380.43,
+     "expenses:subscriptions": 168.12,
+     "expenses:transport": 358.7,
+     "income:freelance": -11169.57,
+     "income:interest": -12.5,
+     "income:salary": -24456.52,
+     "liabilities:credit-card": -1850.87
+    },
+    "£|2025-12-31": {
+     "assets:bank:checking": 10736.57,
+     "assets:bank:savings": 8053.45,
+     "assets:crypto:wallet": 12187.5,
+     "assets:investments:XDWD": 4173,
+     "assets:investments:XEON": 3411,
+     "equity:opening-balances": -18626.67,
+     "expenses:education": 343.47,
+     "expenses:electronics": 920,
+     "expenses:food:groceries": 1390.71,
+     "expenses:food:restaurant": 306.67,
+     "expenses:gifts": 308.33,
+     "expenses:housing:rent": 4750,
+     "expenses:housing:utilities": 603.75,
+     "expenses:shopping": 291.67,
+     "expenses:subscriptions": 128.89,
+     "expenses:transport": 275,
+     "income:freelance": -8563.33,
+     "income:interest": -9.58,
+     "income:salary": -18750,
+     "liabilities:credit-card": -1419
+    }
+   },
+   "raw": {
+    "€|2025-08-31": {
+     "assets:bank:checking": 5738.07,
+     "equity:opening-balances": -5000,
+     "expenses:food:groceries": 545.45,
+     "expenses:food:restaurant": 97,
+     "expenses:housing:rent": 1900,
+     "expenses:housing:utilities": 239.7,
+     "expenses:subscriptions": 29.98,
+     "expenses:transport": 110,
+     "income:salary": -7000
+    },
+    "$|2025-08-31": {
+     "assets:bank:savings": 5731,
+     "equity:opening-balances": -3000,
+     "expenses:education": 199,
+     "income:freelance": -1500,
+     "liabilities:credit-card": -430
+    },
+    "£|2025-08-31": {
+     "assets:bank:checking": 682.02,
+     "expenses:subscriptions": 17.98,
+     "income:freelance": -1200
+    },
+    "BTC|2025-08-31": {
+     "assets:crypto:wallet": 0.175,
+     "equity:opening-balances": -0.15
+    },
+    "XDWD|2025-08-31": {
+     "assets:investments:XDWD": 28,
+     "equity:opening-balances": -20
+    },
+    "XEON|2025-08-31": {
+     "assets:investments:XEON": 19,
+     "equity:opening-balances": -15
+    },
+    "€|2025-11-30": {
+     "assets:bank:checking": 5420.7,
+     "equity:opening-balances": -5000,
+     "expenses:food:groceries": 1353.35,
+     "expenses:food:restaurant": 273,
+     "expenses:housing:rent": 4750,
+     "expenses:housing:utilities": 587.7,
+     "expenses:shopping": 150,
+     "expenses:subscriptions": 74.95,
+     "expenses:transport": 275,
+     "income:salary": -17500,
+     "liabilities:credit-card": -150
+    },
+    "$|2025-11-30": {
+     "assets:bank:savings": 10461,
+     "equity:opening-balances": -3000,
+     "expenses:education": 199,
+     "expenses:electronics": 1200,
+     "income:freelance": -5300,
+     "liabilities:credit-card": -1060
+    },
+    "£|2025-11-30": {
+     "assets:bank:checking": 2155.05,
+     "expenses:subscriptions": 44.95,
+     "income:freelance": -2700
+    },
+    "BTC|2025-11-30": {
+     "assets:crypto:wallet": 0.225,
+     "equity:opening-balances": -0.15
+    },
+    "XDWD|2025-11-30": {
+     "assets:investments:XDWD": 39,
+     "equity:opening-balances": -20
+    },
+    "XEON|2025-11-30": {
+     "assets:investments:XEON": 24,
+     "equity:opening-balances": -15
+    },
+    "€|2025-12-31": {
+     "assets:bank:checking": 8748.61,
+     "equity:opening-balances": -5000,
+     "expenses:food:groceries": 1668.85,
+     "expenses:food:restaurant": 368,
+     "expenses:gifts": 370,
+     "expenses:housing:rent": 5700,
+     "expenses:housing:utilities": 724.5,
+     "expenses:shopping": 350,
+     "expenses:subscriptions": 89.94,
+     "expenses:transport": 330,
+     "income:salary": -22500,
+     "liabilities:credit-card": -470
+    },
+    "$|2025-12-31": {
+     "assets:bank:savings": 10504.5,
+     "equity:opening-balances": -3000,
+     "expenses:education": 448,
+     "expenses:electronics": 1200,
+     "income:freelance": -5300,
+     "income:interest": -12.5,
+     "liabilities:credit-card": -1340
+    },
+    "£|2025-12-31": {
+     "assets:bank:checking": 3446.06,
+     "expenses:subscriptions": 53.94,
+     "income:freelance": -4500
+    },
+    "BTC|2025-12-31": {
+     "assets:crypto:wallet": 0.225,
+     "equity:opening-balances": -0.15
+    },
+    "XDWD|2025-12-31": {
+     "assets:investments:XDWD": 39,
+     "equity:opening-balances": -20
+    },
+    "XEON|2025-12-31": {
+     "assets:investments:XEON": 27,
+     "equity:opening-balances": -15
+    }
+   },
+   "prices": [
+    {
+     "date": "2025-07-10",
+     "from": "$",
+     "to": "€",
+     "rate": 0.925
+    },
+    {
+     "date": "2025-07-12",
+     "from": "BTC",
+     "to": "€",
+     "rate": 60000
+    },
+    {
+     "date": "2025-07-14",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 112.3
+    },
+    {
+     "date": "2025-08-10",
+     "from": "€",
+     "to": "£",
+     "rate": 0.86206897
+    },
+    {
+     "date": "2025-08-12",
+     "from": "XEON",
+     "to": "€",
+     "rate": 149.1
+    },
+    {
+     "date": "2025-09-10",
+     "from": "BTC",
+     "to": "€",
+     "rate": 55000
+    },
+    {
+     "date": "2025-09-18",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 118.5
+    },
+    {
+     "date": "2025-10-11",
+     "from": "$",
+     "to": "€",
+     "rate": 0.92
+    },
+    {
+     "date": "2025-10-13",
+     "from": "XEON",
+     "to": "€",
+     "rate": 148.5
+    },
+    {
+     "date": "2025-11-10",
+     "from": "BTC",
+     "to": "€",
+     "rate": 65000
+    },
+    {
+     "date": "2025-11-18",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 128.4
+    },
+    {
+     "date": "2025-12-12",
+     "from": "XEON",
+     "to": "€",
+     "rate": 151.6
+    },
+    {
+     "date": "2025-12-18",
+     "from": "€",
+     "to": "£",
+     "rate": 0.83333333
+    }
+   ]
+  },
+  "multicurrency+prices": {
+   "files": [
+    "multicurrency.journal",
+    "multicurrency-prices.journal"
+   ],
+   "valued": {
+    "€|2025-08-31": {
+     "assets:bank:checking": 6529.21,
+     "assets:bank:savings": 5301.18,
+     "assets:crypto:wallet": 10150,
+     "assets:investments:XDWD": 3245.2,
+     "assets:investments:XEON": 2832.9,
+     "equity:opening-balances": -21029.5,
+     "expenses:education": 184.08,
+     "expenses:food:groceries": 545.45,
+     "expenses:food:restaurant": 97,
+     "expenses:housing:rent": 1900,
+     "expenses:housing:utilities": 239.7,
+     "expenses:subscriptions": 50.84,
+     "expenses:transport": 110,
+     "income:freelance": -2779.5,
+     "income:salary": -7000,
+     "liabilities:credit-card": -397.75
+    },
+    "$|2025-08-31": {
+     "assets:bank:checking": 7182.13,
+     "assets:bank:savings": 5731,
+     "assets:crypto:wallet": 11165,
+     "assets:investments:XDWD": 3569.72,
+     "assets:investments:XEON": 3116.19,
+     "equity:opening-balances": -23079.95,
+     "expenses:education": 199,
+     "expenses:food:groceries": 600,
+     "expenses:food:restaurant": 106.7,
+     "expenses:housing:rent": 2090,
+     "expenses:housing:utilities": 263.67,
+     "expenses:subscriptions": 55.92,
+     "expenses:transport": 121,
+     "income:freelance": -3031.2,
+     "income:salary": -7700,
+     "liabilities:credit-card": -430
+    },
+    "£|2025-08-31": {
+     "assets:bank:checking": 5628.63,
+     "assets:bank:savings": 4569.98,
+     "assets:crypto:wallet": 8750,
+     "assets:investments:XDWD": 2797.59,
+     "assets:investments:XEON": 2442.16,
+     "equity:opening-balances": -18128.88,
+     "expenses:education": 158.69,
+     "expenses:food:groceries": 470.22,
+     "expenses:food:restaurant": 83.62,
+     "expenses:housing:rent": 1637.93,
+     "expenses:housing:utilities": 206.64,
+     "expenses:subscriptions": 43.82,
+     "expenses:transport": 94.83,
+     "income:freelance": -2396.12,
+     "income:salary": -6034.48,
+     "liabilities:credit-card": -342.89
+    },
+    "€|2025-11-30": {
+     "assets:bank:checking": 8048.81,
+     "assets:bank:savings": 9624.12,
+     "assets:crypto:wallet": 14625,
+     "assets:investments:XDWD": 5007.6,
+     "assets:investments:XEON": 3604.8,
+     "equity:opening-balances": -22331,
+     "expenses:education": 183.08,
+     "expenses:electronics": 1104,
+     "expenses:food:groceries": 1353.35,
+     "expenses:food:restaurant": 273,
+     "expenses:housing:rent": 4750,
+     "expenses:housing:utilities": 587.7,
+     "expenses:shopping": 150,
+     "expenses:subscriptions": 129.77,
+     "expenses:transport": 275,
+     "income:freelance": -8168.68,
+     "income:salary": -17500,
+     "liabilities:credit-card": -1125.2
+    },
+    "$|2025-11-30": {
+     "assets:bank:checking": 8531.74,
+     "assets:bank:savings": 10461,
+     "assets:crypto:wallet": 15502.5,
+     "assets:investments:XDWD": 5308.06,
+     "assets:investments:XEON": 3821.09,
+     "equity:opening-balances": -23745.26,
+     "expenses:education": 199,
+     "expenses:electronics": 1200,
+     "expenses:food:groceries": 1434.55,
+     "expenses:food:restaurant": 289.38,
+     "expenses:housing:rent": 5035,
+     "expenses:housing:utilities": 622.96,
+     "expenses:shopping": 159,
+     "expenses:subscriptions": 137.55,
+     "expenses:transport": 291.5,
+     "income:freelance": -8790.24,
+     "income:salary": -18550,
+     "liabilities:credit-card": -1219
+    },
+    "£|2025-11-30": {
+     "assets:bank:checking": 6600.02,
+     "assets:bank:savings": 7891.78,
+     "assets:crypto:wallet": 11992.5,
+     "assets:investments:XDWD": 4106.23,
+     "assets:investments:XEON": 2955.94,
+     "equity:opening-balances": -18311.42,
+     "expenses:education": 150.13,
+     "expenses:electronics": 905.28,
+     "expenses:food:groceries": 1109.75,
+     "expenses:food:restaurant": 223.86,
+     "expenses:housing:rent": 3895,
+     "expenses:housing:utilities": 481.91,
+     "expenses:shopping": 123,
+     "expenses:subscriptions": 106.41,
+     "expenses:transport": 225.5,
+     "income:freelance": -6698.32,
+     "income:salary": -14350,
+     "liabilities:credit-card": -922.66
+    },
+    "€|2025-12-31": {
+     "assets:bank:checking": 12883.88,
+     "assets:bank:savings": 9664.14,
+     "assets:crypto:wallet": 15750,
+     "assets:investments:XDWD": 5151.9,
+     "assets:investments:XEON": 4093.2,
+     "equity:opening-balances": -23176,
+     "expenses:education": 412.16,
+     "expenses:electronics": 1104,
+     "expenses:food:groceries": 1668.85,
+     "expenses:food:restaurant": 368,
+     "expenses:gifts": 370,
+     "expenses:housing:rent": 5700,
+     "expenses:housing:utilities": 724.5,
+     "expenses:shopping": 350,
+     "expenses:subscriptions": 154.67,
+     "expenses:transport": 330,
+     "income:freelance": -10276,
+     "income:interest": -11.5,
+     "income:salary": -22500,
+     "liabilities:credit-card": -1702.8
+    },
+    "$|2025-12-31": {
+     "assets:bank:checking": 13528.08,
+     "assets:bank:savings": 10504.5,
+     "assets:crypto:wallet": 16537.5,
+     "assets:investments:XDWD": 5409.5,
+     "assets:investments:XEON": 4297.86,
+     "equity:opening-balances": -24436.8,
+     "expenses:education": 448,
+     "expenses:electronics": 1200,
+     "expenses:food:groceries": 1752.29,
+     "expenses:food:restaurant": 386.4,
+     "expenses:gifts": 388.5,
+     "expenses:housing:rent": 5985,
+     "expenses:housing:utilities": 760.72,
+     "expenses:shopping": 367.5,
+     "expenses:subscriptions": 162.4,
+     "expenses:transport": 346.5,
+     "income:freelance": -10970,
+     "income:interest": -12.5,
+     "income:salary": -23625,
+     "liabilities:credit-card": -1833.5
+    },
+    "£|2025-12-31": {
+     "assets:bank:checking": 10736.57,
+     "assets:bank:savings": 8053.45,
+     "assets:crypto:wallet": 13125,
+     "assets:investments:XDWD": 4293.25,
+     "assets:investments:XEON": 3411,
+     "equity:opening-balances": -19313.33,
+     "expenses:education": 343.47,
+     "expenses:electronics": 920,
+     "expenses:food:groceries": 1390.71,
+     "expenses:food:restaurant": 306.67,
+     "expenses:gifts": 308.33,
+     "expenses:housing:rent": 4750,
+     "expenses:housing:utilities": 603.75,
+     "expenses:shopping": 291.67,
+     "expenses:subscriptions": 128.89,
+     "expenses:transport": 275,
+     "income:freelance": -8563.33,
+     "income:interest": -9.58,
+     "income:salary": -18750,
+     "liabilities:credit-card": -1419
+    }
+   },
+   "raw": {
+    "€|2025-08-31": {
+     "assets:bank:checking": 5738.07,
+     "equity:opening-balances": -5000,
+     "expenses:food:groceries": 545.45,
+     "expenses:food:restaurant": 97,
+     "expenses:housing:rent": 1900,
+     "expenses:housing:utilities": 239.7,
+     "expenses:subscriptions": 29.98,
+     "expenses:transport": 110,
+     "income:salary": -7000
+    },
+    "$|2025-08-31": {
+     "assets:bank:savings": 5731,
+     "equity:opening-balances": -3000,
+     "expenses:education": 199,
+     "income:freelance": -1500,
+     "liabilities:credit-card": -430
+    },
+    "£|2025-08-31": {
+     "assets:bank:checking": 682.02,
+     "expenses:subscriptions": 17.98,
+     "income:freelance": -1200
+    },
+    "BTC|2025-08-31": {
+     "assets:crypto:wallet": 0.175,
+     "equity:opening-balances": -0.15
+    },
+    "XDWD|2025-08-31": {
+     "assets:investments:XDWD": 28,
+     "equity:opening-balances": -20
+    },
+    "XEON|2025-08-31": {
+     "assets:investments:XEON": 19,
+     "equity:opening-balances": -15
+    },
+    "€|2025-11-30": {
+     "assets:bank:checking": 5420.7,
+     "equity:opening-balances": -5000,
+     "expenses:food:groceries": 1353.35,
+     "expenses:food:restaurant": 273,
+     "expenses:housing:rent": 4750,
+     "expenses:housing:utilities": 587.7,
+     "expenses:shopping": 150,
+     "expenses:subscriptions": 74.95,
+     "expenses:transport": 275,
+     "income:salary": -17500,
+     "liabilities:credit-card": -150
+    },
+    "$|2025-11-30": {
+     "assets:bank:savings": 10461,
+     "equity:opening-balances": -3000,
+     "expenses:education": 199,
+     "expenses:electronics": 1200,
+     "income:freelance": -5300,
+     "liabilities:credit-card": -1060
+    },
+    "£|2025-11-30": {
+     "assets:bank:checking": 2155.05,
+     "expenses:subscriptions": 44.95,
+     "income:freelance": -2700
+    },
+    "BTC|2025-11-30": {
+     "assets:crypto:wallet": 0.225,
+     "equity:opening-balances": -0.15
+    },
+    "XDWD|2025-11-30": {
+     "assets:investments:XDWD": 39,
+     "equity:opening-balances": -20
+    },
+    "XEON|2025-11-30": {
+     "assets:investments:XEON": 24,
+     "equity:opening-balances": -15
+    },
+    "€|2025-12-31": {
+     "assets:bank:checking": 8748.61,
+     "equity:opening-balances": -5000,
+     "expenses:food:groceries": 1668.85,
+     "expenses:food:restaurant": 368,
+     "expenses:gifts": 370,
+     "expenses:housing:rent": 5700,
+     "expenses:housing:utilities": 724.5,
+     "expenses:shopping": 350,
+     "expenses:subscriptions": 89.94,
+     "expenses:transport": 330,
+     "income:salary": -22500,
+     "liabilities:credit-card": -470
+    },
+    "$|2025-12-31": {
+     "assets:bank:savings": 10504.5,
+     "equity:opening-balances": -3000,
+     "expenses:education": 448,
+     "expenses:electronics": 1200,
+     "income:freelance": -5300,
+     "income:interest": -12.5,
+     "liabilities:credit-card": -1340
+    },
+    "£|2025-12-31": {
+     "assets:bank:checking": 3446.06,
+     "expenses:subscriptions": 53.94,
+     "income:freelance": -4500
+    },
+    "BTC|2025-12-31": {
+     "assets:crypto:wallet": 0.225,
+     "equity:opening-balances": -0.15
+    },
+    "XDWD|2025-12-31": {
+     "assets:investments:XDWD": 39,
+     "equity:opening-balances": -20
+    },
+    "XEON|2025-12-31": {
+     "assets:investments:XEON": 27,
+     "equity:opening-balances": -15
+    }
+   },
+   "prices": [
+    {
+     "date": "2025-07-01",
+     "from": "€",
+     "to": "$",
+     "rate": 1.08
+    },
+    {
+     "date": "2025-07-01",
+     "from": "€",
+     "to": "£",
+     "rate": 0.85
+    },
+    {
+     "date": "2025-07-01",
+     "from": "BTC",
+     "to": "€",
+     "rate": 62500
+    },
+    {
+     "date": "2025-07-01",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 112.3
+    },
+    {
+     "date": "2025-07-01",
+     "from": "XEON",
+     "to": "€",
+     "rate": 146.2
+    },
+    {
+     "date": "2025-07-10",
+     "from": "$",
+     "to": "€",
+     "rate": 0.925
+    },
+    {
+     "date": "2025-07-12",
+     "from": "BTC",
+     "to": "€",
+     "rate": 60000
+    },
+    {
+     "date": "2025-07-14",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 112.3
+    },
+    {
+     "date": "2025-08-01",
+     "from": "€",
+     "to": "$",
+     "rate": 1.1
+    },
+    {
+     "date": "2025-08-01",
+     "from": "€",
+     "to": "£",
+     "rate": 0.86
+    },
+    {
+     "date": "2025-08-01",
+     "from": "BTC",
+     "to": "€",
+     "rate": 58000
+    },
+    {
+     "date": "2025-08-01",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 115.9
+    },
+    {
+     "date": "2025-08-01",
+     "from": "XEON",
+     "to": "€",
+     "rate": 149.1
+    },
+    {
+     "date": "2025-08-10",
+     "from": "€",
+     "to": "£",
+     "rate": 0.86206897
+    },
+    {
+     "date": "2025-08-12",
+     "from": "XEON",
+     "to": "€",
+     "rate": 149.1
+    },
+    {
+     "date": "2025-09-01",
+     "from": "€",
+     "to": "$",
+     "rate": 1.07
+    },
+    {
+     "date": "2025-09-01",
+     "from": "€",
+     "to": "£",
+     "rate": 0.84
+    },
+    {
+     "date": "2025-09-01",
+     "from": "BTC",
+     "to": "€",
+     "rate": 55000
+    },
+    {
+     "date": "2025-09-01",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 118.5
+    },
+    {
+     "date": "2025-09-01",
+     "from": "XEON",
+     "to": "€",
+     "rate": 147.8
+    },
+    {
+     "date": "2025-09-10",
+     "from": "BTC",
+     "to": "€",
+     "rate": 55000
+    },
+    {
+     "date": "2025-09-18",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 118.5
+    },
+    {
+     "date": "2025-10-01",
+     "from": "€",
+     "to": "$",
+     "rate": 1.09
+    },
+    {
+     "date": "2025-10-01",
+     "from": "€",
+     "to": "£",
+     "rate": 0.83
+    },
+    {
+     "date": "2025-10-01",
+     "from": "BTC",
+     "to": "€",
+     "rate": 60000
+    },
+    {
+     "date": "2025-10-01",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 124.7
+    },
+    {
+     "date": "2025-10-01",
+     "from": "XEON",
+     "to": "€",
+     "rate": 148.5
+    },
+    {
+     "date": "2025-10-11",
+     "from": "$",
+     "to": "€",
+     "rate": 0.92
+    },
+    {
+     "date": "2025-10-13",
+     "from": "XEON",
+     "to": "€",
+     "rate": 148.5
+    },
+    {
+     "date": "2025-11-01",
+     "from": "€",
+     "to": "$",
+     "rate": 1.06
+    },
+    {
+     "date": "2025-11-01",
+     "from": "€",
+     "to": "£",
+     "rate": 0.82
+    },
+    {
+     "date": "2025-11-01",
+     "from": "BTC",
+     "to": "€",
+     "rate": 65000
+    },
+    {
+     "date": "2025-11-01",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 128.4
+    },
+    {
+     "date": "2025-11-01",
+     "from": "XEON",
+     "to": "€",
+     "rate": 150.2
+    },
+    {
+     "date": "2025-11-10",
+     "from": "BTC",
+     "to": "€",
+     "rate": 65000
+    },
+    {
+     "date": "2025-11-18",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 128.4
+    },
+    {
+     "date": "2025-12-01",
+     "from": "€",
+     "to": "$",
+     "rate": 1.05
+    },
+    {
+     "date": "2025-12-01",
+     "from": "€",
+     "to": "£",
+     "rate": 0.81
+    },
+    {
+     "date": "2025-12-01",
+     "from": "BTC",
+     "to": "€",
+     "rate": 70000
+    },
+    {
+     "date": "2025-12-01",
+     "from": "XDWD",
+     "to": "€",
+     "rate": 132.1
+    },
+    {
+     "date": "2025-12-01",
+     "from": "XEON",
+     "to": "€",
+     "rate": 151.6
+    },
+    {
+     "date": "2025-12-12",
+     "from": "XEON",
+     "to": "€",
+     "rate": 151.6
+    },
+    {
+     "date": "2025-12-18",
+     "from": "€",
+     "to": "£",
+     "rate": 0.83333333
+    }
+   ]
+  }
+ }
+}
